@@ -1,12 +1,56 @@
 {% extends 'base.html' %}
-
-{#- Phase 2 shell: header and footer only. The hero, articles and projects
-    sections arrive in phase 3 (and the hero's JS in phase 5). #}
+{%- from 'partials/components.html' import image, round_button, article_subtitle %}
 
 {% block styles %}
+  <link rel="stylesheet" href="/css/components/hero.modules.css">
+  <link rel="stylesheet" href="/css/components/articles-section.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+  <link rel="stylesheet" href="/css/components/portfolio.modules.css">
   <link rel="stylesheet" href="/css/components/footer.modules.css">
+  <link rel="stylesheet" href="/css/components/shooting-stars.modules.css">
 {%- endblock %}
 
-{% block footer %}
+{% block body %}
+  {% include 'partials/shooting_stars.html' %}
+  {% include 'partials/header.html' %}
+
+  {#- The hero (black hole, star field, lensing canvas) lands in phase 5. #}
+
+  {%- if articles %}
+  <section class="articles-section section" id="articles">
+    <div class="container">
+      <div class="section-title-container">
+        <h2 class="title section-title">Articles</h2>
+        <div class="section-subtitle-container">
+          <span class="subtitle-number has-sparkles">03</span>
+          <h5 class="title section-subtitle">recent</h5>
+        </div>
+      </div>
+
+      <div class="portfolio-cards d-grid">
+        {%- for article in articles %}
+        <a href="/articles/{{ article.slug }}" class="portfolio-card portfolio-card-{{ loop.index }}">
+          <div class="card-image">
+            {%- if article.image_url %}
+            {{ image(article.image_url | cloudinary(800), article.title) }}
+            {%- endif %}
+          </div>
+
+          <div class="card-heading">
+            <h5 class="card-title">{{ article.title }}</h5>
+            <span class="card-subtitle">{{ article_subtitle(article) }}</span>
+          </div>
+        </a>
+        {%- endfor %}
+
+        <div class="portfolio-card portfolio-card-4 large-button-container">
+          {{ round_button('/articles', 'See All') }}
+        </div>
+      </div>
+    </div>
+  </section>
+  {%- endif %}
+
+  {% include 'partials/projects_section.html' %}
   {% include 'partials/footer.html' %}
 {%- endblock %}

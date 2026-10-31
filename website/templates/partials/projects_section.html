@@ -1,0 +1,52 @@
+{%- from 'partials/components.html' import image, round_button -%}
+{#- Hand-picked on purpose, not read from the database: these three cards were
+    hardcoded in the Next.js PortfolioSection too. -#}
+<section class="portfolio section" id="portfolio">
+  <div class="container">
+    <div class="section-title-container">
+      <h2 class="title section-title">Projects</h2>
+      <div class="section-subtitle-container">
+        <span class="subtitle-number has-sparkles">02</span>
+        <h5 class="title section-subtitle">recent</h5>
+      </div>
+    </div>
+
+    <div class="portfolio-cards d-grid">
+      <a href="/projects/halting" class="portfolio-card portfolio-card-1">
+        <div class="card-image">
+          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/physics-model-project_oafck7.png' | cloudinary(800), 'Halting') }}
+        </div>
+
+        <div class="card-heading">
+          <h5 class="card-title">Halting</h5>
+          <span class="card-subtitle">This library physics library allows you to manipulate and deal with physical quantities such as mass, time, length, energy, and much more.</span>
+        </div>
+      </a>
+
+      <a href="/projects/quantum-programming-project" class="portfolio-card portfolio-card-2">
+        <div class="card-image">
+          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/quantum-programming-project_ejqzgb.png' | cloudinary(800), 'Quantum Programming Project') }}
+        </div>
+        <div class="card-heading">
+          <h5 class="card-title">Quantum Programming Project</h5>
+          <span class="card-subtitle">Shaping the next generation of quantum programing. Stay tunned for updates</span>
+        </div>
+      </a>
+
+      <a href="/projects/physics-engine" class="portfolio-card portfolio-card-3">
+        <div class="card-image">
+          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/blockchain-project-thumb_mvomf0.png' | cloudinary(800), 'Physics Engine') }}
+        </div>
+
+        <div class="card-heading">
+          <h5 class="card-title">Physics Engine</h5>
+          <span class="card-subtitle">Physics engine built in C, designed to perform real world simulations of objects, planets, and particles.</span>
+        </div>
+      </a>
+
+      <div class="portfolio-card portfolio-card-4 large-button-container">
+        {{ round_button('/projects', 'See All') }}
+      </div>
+    </div>
+  </div>
+</section>
