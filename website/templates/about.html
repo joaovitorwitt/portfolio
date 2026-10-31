@@ -6,13 +6,18 @@
   <link rel="stylesheet" href="/css/components/reveal.modules.css">
   <link rel="stylesheet" href="/css/pages/about/about.modules.css">
   <link rel="stylesheet" href="/css/components/pageglow.modules.css">
+  {#- The hidden state lives in CSS, so without JS the reveal would never
+      fire and the page would stay invisible. #}
+  <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
+{%- endblock %}
+
+{% block scripts %}
+  <script src="/js/reveal.js" defer></script>
 {%- endblock %}
 
 {% block body %}
 <div>
-  {#- Phase 5 wraps everything below in the .reveal fade-in. Without reveal.js
-      in place yet, that class would keep the page invisible. #}
-  <div>
+  <div class="reveal">
     {% include 'partials/header.html' %}
     <div class="page-glow"></div>
     <div class="container">
