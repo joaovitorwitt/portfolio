@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import image, round_button, article_subtitle %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/pages/article/article.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+  <link rel="stylesheet" href="/css/components/related-articles.modules.css">
+  <link rel="stylesheet" href="/css/components/reading-progress.modules.css">
+  <link rel="stylesheet" href="/css/components/share-buttons.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div class="article-page-wrapper">
+  {#- Reading progress bar and MathJax arrive in phase 5. #}
+  {% include 'partials/header.html' %}
+  <section class="blog-post section-header-offset">
+    <div class="blog-post-container container">
+      <div class="blog-post-data">
+        <h3 class="blog-post-title title">{{ article.title }}</h3>
+
+        <div class="article-data">
+          <span>{{ article.created_at | date }}{% if article.content %} · {{ article.content | reading_time }} min read{% endif %}</span>
+        </div>
+
+        {%- if article.image_url %}
+        {{ image(article.image_url | cloudinary(1600), article.title, priority=True) }}
+        {%- endif %}
+      </div>
+
+      <div class="container">
+        {%- if article.content %}
+        {#- Authored HTML from the database, rendered as-is. #}
+        <div>{{ article.content | safe }}</div>
+        {%- endif %}
+      </div>
+
+      {% include 'partials/share_buttons.html' %}
+    </div>
+  </section>
+
+  {%- if related %}
+  <section class="related-articles">
+    <div class="container">
+      <h4 class="related-articles-title">Related articles</h4>
+
+      <div class="related-articles-grid">
+        {%- for item in related %}
+        <a href="/articles/{{ item.slug }}" class="related-article-card">
+          <div class="card-image">
+            {%- if item.image_url %}
+            {{ image(item.image_url | cloudinary(800), item.title) }}
+            {%- endif %}
+          </div>
+
+          <div class="card-heading">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <span class="card-subtitle">{{ article_subtitle(item) }}</span>
+          </div>
+        </a>
+        {%- endfor %}
+      </div>
+    </div>
+  </section>
+  {%- endif %}
+
+  <div class="large-button-container" style="padding: 3rem 0">
+    {{ round_button('/articles', 'Return') }}
+  </div>
+</div>
+{%- endblock %}

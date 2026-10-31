@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import image, round_button %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/pages/articles/articles.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div class="articles-page-wrapper">
+  {% include 'partials/header.html' %}
+  <div class="container">
+    {%- if articles %}
+    <div class="posts-wrapper">
+      {%- for article in articles %}
+      <a class="article" href="/articles/{{ article.slug }}">
+        <div class="article-wrapper">
+          <div class="posts-article-image-wrapper">
+            {%- if article.image_url %}
+            {{ image(article.image_url | cloudinary(800), article.title, class='article-image') }}
+            {%- endif %}
+          </div>
+
+          <div class="article-data-container">
+            <h3 class="article-title">{{ article.title }}</h3>
+            <p class="article-description">{{ article.description }}</p>
+
+            <div class="article-data">
+              <span class="article-data-spacer"></span>
+              <p class="tags">{{ article.tags | join(', ') }}</p>
+              <span class="title-font">{{ article.created_at | date }}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+      {%- endfor %}
+    </div>
+    {%- else %}
+    <p style="text-align: center">No articles found.</p>
+    {%- endif %}
+
+    <div class="large-button-container" style="padding-top: 3rem; padding-bottom: 3rem">
+      {{ round_button('/', 'Return') }}
+    </div>
+  </div>
+</div>
+{%- endblock %}

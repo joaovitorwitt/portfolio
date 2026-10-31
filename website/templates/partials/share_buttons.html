@@ -1,0 +1,28 @@
+{%- from 'partials/icons.html' import icon -%}
+{#- Expects `article` and `page_url`. The copy-link button is wired up by
+    share.js in phase 5; the X and LinkedIn links work without any JS. -#}
+<div class="share-buttons">
+  <span class="share-buttons-label">Share this article</span>
+
+  <ul class="list">
+    <li class="list-item">
+      <a href="https://twitter.com/intent/tweet?text={{ article.title | uri_component }}&amp;url={{ page_url | uri_component }}" target="_blank" rel="noreferrer" class="list-link" aria-label="Share on X">
+        {{ icon('x-twitter', style='font-size: 2rem') }}
+      </a>
+    </li>
+
+    <li class="list-item">
+      <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ page_url | uri_component }}" target="_blank" rel="noreferrer" class="list-link" aria-label="Share on LinkedIn">
+        {{ icon('linkedin', style='font-size: 2rem') }}
+      </a>
+    </li>
+
+    <li class="list-item">
+      <button type="button" class="list-link share-copy-button" aria-label="Copy link" data-url="{{ page_url }}">
+        {{ icon('link', style='font-size: 2rem') }}
+      </button>
+    </li>
+  </ul>
+
+  <span class="share-buttons-feedback" aria-live="polite"></span>
+</div>
