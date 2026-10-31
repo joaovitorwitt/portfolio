@@ -1,6 +1,6 @@
 {%- from 'partials/icons.html' import icon -%}
-{#- Expects `article` and `page_url`. The copy-link button is wired up by
-    share.js in phase 5; the X and LinkedIn links work without any JS. -#}
+{#- Expects `article` and `page_url`. share.js wires up the copy-link
+    button; the X and LinkedIn links work without any JS. -#}
 <div class="share-buttons">
   <span class="share-buttons-label">Share this article</span>
 
@@ -18,8 +18,12 @@
     </li>
 
     <li class="list-item">
-      <button type="button" class="list-link share-copy-button" aria-label="Copy link" data-url="{{ page_url }}">
+      {#- All three states are rendered; site.css shows the one matching
+          data-status, which share.js sets. #}
+      <button type="button" class="list-link share-copy-button" aria-label="Copy link" data-url="{{ page_url }}" data-status="idle">
         {{ icon('link', style='font-size: 2rem') }}
+        {{ icon('check', style='font-size: 2rem') }}
+        {{ icon('triangle-exclamation', style='font-size: 2rem') }}
       </button>
     </li>
   </ul>

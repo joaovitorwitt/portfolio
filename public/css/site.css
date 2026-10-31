@@ -59,3 +59,18 @@
   font-size: 1.8rem;
   margin-bottom: 2rem;
 }
+
+/************************/
+/*   Copy-link button   */
+/************************/
+
+/* share.js sets data-status; only the matching icon shows. */
+.share-copy-button .svg-inline--fa {
+  display: none;
+}
+
+.share-copy-button[data-status="idle"] .fa-link,
+.share-copy-button[data-status="copied"] .fa-check,
+.share-copy-button[data-status="error"] .fa-triangle-exclamation {
+  display: var(--fa-display, inline-block);
+}

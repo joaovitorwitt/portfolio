@@ -9,9 +9,24 @@
   <link rel="stylesheet" href="/css/components/share-buttons.modules.css">
 {%- endblock %}
 
+{% block scripts %}
+  <script src="/js/reading-progress.js" defer></script>
+  <script src="/js/share.js" defer></script>
+  {%- if article.content %}
+  {#- Bodies may contain TeX. MathJax's default startup typesets the page
+      once it loads; async keeps it off the critical path. #}
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+  {%- endif %}
+{%- endblock %}
+
 {% block body %}
 <div class="article-page-wrapper">
-  {#- Reading progress bar and MathJax arrive in phase 5. #}
+  <div class="reading-progress-track">
+    <div class="reading-progress-bar"></div>
+  </div>
+
+  <button type="button" class="back-to-top" aria-label="Back to top">↑</button>
+
   {% include 'partials/header.html' %}
   <section class="blog-post section-header-offset">
     <div class="blog-post-container container">
