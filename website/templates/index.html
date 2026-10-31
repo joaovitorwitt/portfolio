@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{#- Phase 2 shell: header and footer only. The hero, articles and projects
+    sections arrive in phase 3 (and the hero's JS in phase 5). #}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/components/footer.modules.css">
+{%- endblock %}
+
+{% block footer %}
+  {% include 'partials/footer.html' %}
+{%- endblock %}

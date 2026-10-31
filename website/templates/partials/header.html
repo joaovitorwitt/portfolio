@@ -1,0 +1,36 @@
+{%- from 'partials/icons.html' import icon -%}
+<header class="header" id="home">
+  <nav class="navbar container">
+    <a href="/" class="logo">João.</a>
+
+    <div class="navbar-buttons">
+      <button type="button" class="button icon-button menu-toggle-button" aria-label="Toggle menu" aria-expanded="false" aria-controls="site-menu">
+        {{ icon('bars', class='open-icon', style='font-size: 2.4rem; margin: auto') }}
+        {{ icon('xmark', class='close-icon', style='font-size: 2.4rem; margin: auto') }}
+      </button>
+
+      {#- Both icons are rendered; site.css shows the one for the current
+          data-theme, so the right icon is there from the first paint. #}
+      <button type="button" class="button icon-button theme-toggle-button" aria-label="Toggle dark mode">
+        {{ icon('moon', style='font-size: 2.4rem; margin: auto') }}
+        {{ icon('sun', style='font-size: 2.4rem; margin: auto') }}
+      </button>
+    </div>
+
+    <div class="menu" id="site-menu">
+      <ul class="list">
+        <li class="list-item">
+          <a href="/about" class="list-link"><span>01</span> About</a>
+        </li>
+
+        <li class="list-item">
+          <a href="/projects" class="list-link"><span>02</span> Projects</a>
+        </li>
+
+        <li class="list-item">
+          <a href="/articles" class="list-link"><span>03</span> Articles</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>

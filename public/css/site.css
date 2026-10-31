@@ -1,0 +1,35 @@
+/*
+ * Rules the Next.js build got from npm packages or React state, which the
+ * copied legacy CSS doesn't cover. Linked right after globals.css, before
+ * any component CSS.
+ */
+
+/************************/
+/*   Inline SVG icons   */
+/************************/
+
+/* The base rule from @fortawesome/fontawesome-svg-core 7.3.1. Component CSS
+   (.close-icon and friends) is linked later, so it still wins on display. */
+.svg-inline--fa {
+  box-sizing: content-box;
+  display: var(--fa-display, inline-block);
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.125em;
+  width: var(--fa-width, 1.25em);
+}
+
+/************************/
+/*     Theme toggle     */
+/************************/
+
+/* Sun in dark mode, moon in light, driven by the data-theme the head script
+   sets before paint, so the icon never flips after load. */
+.theme-toggle-button .fa-sun,
+[data-theme="dark"] .theme-toggle-button .fa-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle-button .fa-sun {
+  display: block;
+}

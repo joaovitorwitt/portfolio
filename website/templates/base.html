@@ -1,0 +1,87 @@
+{#-
+  Every page extends this. Views pass an optional `meta` dict to override the
+  site-wide defaults:
+
+    title           page part of the title, rendered as "X | João Vitor Witt"
+    description     page description
+    type            OpenGraph type, 'website' (default) or 'article'
+    image           preview image URL, absolute or site-relative
+    image_width, image_height
+    published_time  datetime, for article pages
+    tags            list of strings, for article pages
+-#}
+{%- set meta = meta | default({}) -%}
+{%- set title = meta.title ~ ' | ' ~ site.title if meta.title else site.title -%}
+{%- set description = meta.description or site.description -%}
+{%- set image = meta.image or site.image -%}
+<!DOCTYPE html>
+<html lang="en" data-scroll-behavior="smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {#- Runs before the stylesheets so the first paint already uses the right
+      theme. A saved choice wins; otherwise the OS preference decides. Uses the
+      same localStorage key next-themes did, so returning visitors keep theirs. #}
+  <script>
+    (function () {
+      var theme;
+      try { theme = localStorage.getItem('theme'); } catch (e) {}
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}">
+  <meta name="creator" content="{{ site.creator }}">
+  <meta name="keywords" content="{{ site.keywords | join(',') }}">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ site.url }}/rss.xml">
+
+  {%- block opengraph %}
+  <meta property="og:type" content="{{ meta.type or 'website' }}">
+  <meta property="og:url" content="{{ page_url }}">
+  <meta property="og:site_name" content="{{ site.title }}">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ description }}">
+  <meta property="og:image" content="{{ site.url ~ image if image.startswith('/') else image }}">
+  {%- if not meta.image or meta.image_width %}
+  <meta property="og:image:width" content="{{ meta.image_width or site.image_width }}">
+  <meta property="og:image:height" content="{{ meta.image_height or site.image_height }}">
+  {%- endif %}
+  <meta property="og:image:alt" content="{{ meta.title or site.title }}">
+  {%- if meta.published_time %}
+  <meta property="article:published_time" content="{{ meta.published_time.isoformat() }}">
+  {%- endif %}
+  {%- for tag in meta.tags or [] %}
+  <meta property="article:tag" content="{{ tag }}">
+  {%- endfor %}
+  {%- endblock %}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins&display=swap">
+
+  {#- Order matters: site.css holds the icon base rule, which component CSS
+      such as .close-icon has to override. #}
+  <link rel="stylesheet" href="/css/globals.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/components/header.modules.css">
+  {%- block styles %}{% endblock %}
+
+  <script src="/js/theme.js" defer></script>
+  <script src="/js/menu.js" defer></script>
+  {%- block scripts %}{% endblock %}
+</head>
+<body>
+  {%- block before_header %}{% endblock %}
+  {% include 'partials/header.html' %}
+  {%- block content %}{% endblock %}
+  {%- block footer %}{% endblock %}
+</body>
+</html>

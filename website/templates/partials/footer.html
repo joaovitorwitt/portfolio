@@ -1,0 +1,38 @@
+{%- from 'partials/icons.html' import icon -%}
+<footer class="footer">
+  <div class="footer-container container">
+    <div class="social-media">
+      <ul class="list">
+        <li class="list-item">
+          <a href="https://github.com/joaovitorwitt" target="_blank" class="list-link" rel="noreferrer" aria-label="GitHub">
+            {{ icon('github', style='font-size: 2.5rem') }}
+          </a>
+        </li>
+
+        <li class="list-item">
+          <a href="https://www.linkedin.com/in/joaovitorwitt/" target="_blank" class="list-link" rel="noreferrer" aria-label="LinkedIn">
+            {{ icon('linkedin', style='font-size: 2.5rem') }}
+          </a>
+        </li>
+
+        <li>
+          <a href="https://twitter.com/joaovitorwitt" target="_blank" class="list-link" rel="noreferrer" aria-label="X (Twitter)">
+            {{ icon('x-twitter', style='font-size: 2.5rem') }}
+          </a>
+        </li>
+
+        <li>
+          <a href="https://www.instagram.com/joaaovitorwitt/" target="_blank" class="list-link" rel="noreferrer" aria-label="Instagram">
+            {{ icon('instagram', style='font-size: 2.5rem') }}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <span>&copy; {{ now_year }} João. All rights reserved.</span>
+
+    <a href="#home" class="scroll-top" aria-label="Back to top">
+      {{ icon('chevron-up', style='font-size: 2.5rem') }}
+    </a>
+  </div>
+</footer>

@@ -32,6 +32,34 @@ PREPARE_THRESHOLD = None if os.environ.get('USE_TRANSACTION_POOLER') else 5
 
 CONTENT_KINDS = ('article', 'project')
 
+# Site-wide metadata, the same values the Next.js root layout declared.
+SITE_URL = 'https://www.joaovitorwitt.com'
+SITE_TITLE = 'João Vitor Witt'
+SITE_DESCRIPTION = 'Passionate about programing, math, and physics.'
+SITE_CREATOR = 'João Vitor'
+SITE_KEYWORDS = (
+    'Programming',
+    'Computer Science',
+    'Mathematics',
+    'Physics',
+    'Coding',
+    'Software Development',
+    'Algorithms',
+    'Web Development',
+    'Project Updates',
+    'Newsletter',
+    'JavaScript',
+    'Python',
+    'Physics Research',
+    'Mathematical Concepts',
+    'Educational Content',
+)
+
+# Fallback preview image for link unfurls on pages without their own.
+SITE_IMAGE = '/img/profile-picture.jpg'
+SITE_IMAGE_WIDTH = 800
+SITE_IMAGE_HEIGHT = 800
+
 # How long a page stays fresh. Articles are published rarely, so minutes are
 # safe; a new post simply takes up to this long to appear.
 CACHE_MAX_AGE = int(os.environ.get('CACHE_MAX_AGE', 300))
