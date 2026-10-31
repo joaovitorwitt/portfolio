@@ -115,6 +115,11 @@ def sitemap():
     )
 
 
+@bp.app_errorhandler(404)
+def not_found(_error):
+    return render_template('404.html', meta={'title': 'Not Found'}), 404
+
+
 @bp.route('/health')
 def health():
     return jsonify({'status': 'ok'})

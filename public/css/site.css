@@ -33,3 +33,29 @@
 [data-theme="dark"] .theme-toggle-button .fa-sun {
   display: block;
 }
+
+/************************/
+/*       404 page       */
+/************************/
+
+/* New page (Next.js only had its built-in 404), styled from the same tokens
+   as the rest of the site. */
+.not-found {
+  display: grid;
+  justify-items: center;
+  gap: 2rem;
+  padding-block: 6rem 8rem;
+  text-align: center;
+}
+
+.not-found-code {
+  font-family: var(--title-font-family);
+  font-size: clamp(8rem, 20vw, 14rem);
+  font-weight: 300;
+  line-height: 1;
+}
+
+.not-found-message {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+}

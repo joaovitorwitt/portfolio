@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import round_button %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/components/pageglow.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div class="not-found-page-wrapper">
+  {% include 'partials/header.html' %}
+  <div class="page-glow"></div>
+  <main class="container not-found">
+    <h1 class="title not-found-code">404</h1>
+    <p class="not-found-message">This page could not be found.</p>
+
+    <div class="large-button-container">
+      {{ round_button('/', 'Return') }}
+    </div>
+  </main>
+</div>
+{%- endblock %}
