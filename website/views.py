@@ -1,7 +1,8 @@
 import logging
 
-from flask import Blueprint, abort, jsonify, render_template
+from flask import Blueprint, Response, abort, jsonify, render_template
 
+from website import feeds
 from website.db import ContentRepository
 
 log = logging.getLogger(__name__)
@@ -94,6 +95,23 @@ def project(slug: str):
             'description': item['description'],
             'image': item['image_url'],
         },
+    )
+
+
+@bp.route('/rss.xml')
+def rss():
+    articles = repository.search(kind='article', limit=feeds.RSS_LIMIT)
+    return Response(feeds.build_rss(articles), mimetype='application/rss+xml')
+
+
+@bp.route('/sitemap.xml')
+def sitemap():
+    return Response(
+        feeds.build_sitemap(
+            repository.search(kind='article', limit=100),
+            repository.search(kind='project', limit=100),
+        ),
+        mimetype='application/xml',
     )
 
 
