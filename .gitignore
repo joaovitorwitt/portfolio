@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.ruff_cache/
+
+# Environments
+.env
+.venv/
+venv/
+
+# Local seed data; the real content lives in the database
+fixtures/
+
+# Vercel
+.vercel/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
