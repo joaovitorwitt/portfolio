@@ -1,0 +1,130 @@
+.section {
+  padding-block: var(--section-vertical-spacing);
+  position: relative;
+}
+
+.articles-section {
+  margin-top: 6rem;
+}
+
+.section-title-container {
+  display: inline-block;
+  margin-bottom: 5rem;
+}
+
+.title {
+  font-family: var(--title-font-family);
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-size: clamp(4rem, 10vw, 8rem);
+}
+
+.section-subtitle-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 1.5rem;
+}
+
+.subtitle-number {
+  width: 5rem;
+  height: 5rem;
+  border: 2px solid var(--default-text-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subtitle-number.has-sparkles::before,
+.subtitle-number.has-sparkles::after {
+  width: 1rem;
+  height: 1rem;
+}
+
+.subtitle-number.has-sparkles::before {
+  top: -0.5rem;
+  right: -0.5rem;
+}
+
+.subtitle-number.has-sparkles::after {
+  bottom: -0.5rem;
+  left: -0.5rem;
+}
+
+.section-subtitle {
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.portfolio-cards {
+  gap: 2.5rem;
+}
+
+.card-image {
+  height: 30rem;
+  background-color: #b3bbce;
+  margin-bottom: 2.5rem;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.25s;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1rem;
+}
+
+.portfolio-card:hover .card-image,
+.portfolio-card:focus .card-image {
+  background-color: #ff7575;
+}
+
+.card-heading {
+  color: var(--default-text-color);
+}
+
+.card-title {
+  font-size: 2rem;
+}
+
+.card-subtitle {
+  font-size: 1.4rem;
+  opacity: 0.8;
+}
+
+.large-button-container {
+  display: flex;
+}
+
+@media screen and (min-width: 768px) {
+  .portfolio-cards {
+    grid-template-columns: repeat(8, 1fr);
+  }
+
+  .portfolio-card-1 {
+    grid-column: 1/6;
+    grid-row: 1 / span 10;
+  }
+
+  .portfolio-card-2 {
+    grid-column: 6/-1;
+    grid-row: 2 / span 10;
+  }
+
+  .portfolio-card-3 {
+    grid-column: 1/5;
+    grid-row: 11 / span 10;
+  }
+
+  .portfolio-card-4 {
+    grid-column: 5/-1;
+    grid-row: 12 / span 10;
+  }
+}

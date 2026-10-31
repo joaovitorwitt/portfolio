@@ -1,0 +1,21 @@
+/* Values mirror the scroll-reveal defaults this replaced: a 50px slide down
+   from the top over 650ms, after a 350ms delay. */
+.reveal {
+  opacity: 0;
+  transform: translateY(-50px);
+  transition: opacity 650ms cubic-bezier(0.5, 0, 0, 1) 350ms,
+    transform 650ms cubic-bezier(0.5, 0, 0, 1) 350ms;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

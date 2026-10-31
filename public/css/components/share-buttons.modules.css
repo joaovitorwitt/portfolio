@@ -1,0 +1,25 @@
+.share-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 4rem;
+}
+
+.share-buttons-label {
+  font-size: 1.4rem;
+  opacity: 0.8;
+}
+
+.share-copy-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.share-buttons-feedback {
+  font-size: 1.3rem;
+  opacity: 0.7;
+}

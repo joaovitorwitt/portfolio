@@ -1,0 +1,571 @@
+/* position:fixed (not absolute) pins this to the viewport rather than a
+   point in the document, so streaks stay visible across the whole
+   homepage as the user scrolls — not just while the hero is in view. The
+   per-instance position percentages below were originally tuned for the
+   hero's own box, but that box is exactly 100vw x 100vh (min-height:100vh),
+   identical to the viewport this layer now covers, so they carry over
+   unchanged. pointer-events:none is critical here: this is a fixed,
+   full-viewport layer, so without it every link/button on the page would
+   stop being clickable, not just ones inside the hero. */
+.shooting-stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Each streak is a dot with a fading tail (::before) pointing opposite the
+   travel direction. The travel angle is a static rotate() baked in per
+   instance below; the keyframe only adds translateX along that already-
+   rotated axis, same "rotate once, translate along the local axis" trick
+   the orbiting stars use. Most of each animation cycle is spent invisible
+   and parked, so streaks appear occasionally rather than looping visibly.
+   Color comes from --default-text-color (not a hardcoded white) so these
+   stay visible in light theme too — a plain white streak would have been
+   nearly invisible against that theme's light background, which was
+   likely a real contributor to "hard to notice." The glow (box-shadow) is
+   what makes the head read as a bright point rather than a plain dot. */
+.shooting-star {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--default-text-color);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--default-text-color) 80%, transparent);
+  opacity: 0;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.shooting-star::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  width: 130px;
+  height: 1px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--default-text-color) 90%, transparent)
+  );
+}
+
+/* Spawn points sit inside the left or right side (never the middle) —
+   odd-numbered instances start near the left and travel rightward (angle
+   near 0deg in their keyframes below), even-numbered ones start near the
+   right and travel leftward (angle near 180deg). They spawn on-screen
+   (left:8%/92%), not off-screen — only the direction matters here. */
+.shooting-star-1 {
+  top: 12%;
+  left: 8%;
+  animation-name: shooting-star-1;
+  animation-duration: 13s;
+  animation-delay: -3s;
+}
+
+.shooting-star-2 {
+  top: 20%;
+  left: 92%;
+  animation-name: shooting-star-2;
+  animation-duration: 17s;
+  animation-delay: -9s;
+}
+
+.shooting-star-3 {
+  top: 38%;
+  left: 8%;
+  animation-name: shooting-star-3;
+  animation-duration: 15s;
+  animation-delay: -2s;
+}
+
+.shooting-star-4 {
+  top: 45%;
+  left: 92%;
+  animation-name: shooting-star-4;
+  animation-duration: 20s;
+  animation-delay: -12s;
+}
+
+.shooting-star-5 {
+  top: 62%;
+  left: 8%;
+  animation-name: shooting-star-5;
+  animation-duration: 14s;
+  animation-delay: -7s;
+}
+
+.shooting-star-6 {
+  top: 68%;
+  left: 92%;
+  animation-name: shooting-star-6;
+  animation-duration: 19s;
+  animation-delay: -1s;
+}
+
+.shooting-star-7 {
+  top: 88%;
+  left: 8%;
+  animation-name: shooting-star-7;
+  animation-duration: 16s;
+  animation-delay: -10s;
+}
+
+.shooting-star-8 {
+  top: 92%;
+  left: 92%;
+  animation-name: shooting-star-8;
+  animation-duration: 22s;
+  animation-delay: -5s;
+}
+
+.shooting-star-9 {
+  top: 5%;
+  left: 8%;
+  animation-name: shooting-star-9;
+  animation-duration: 18s;
+  animation-delay: -4s;
+}
+
+.shooting-star-10 {
+  top: 15%;
+  left: 92%;
+  animation-name: shooting-star-10;
+  animation-duration: 21s;
+  animation-delay: -14s;
+}
+
+.shooting-star-11 {
+  top: 28%;
+  left: 8%;
+  animation-name: shooting-star-11;
+  animation-duration: 12s;
+  animation-delay: -6s;
+}
+
+.shooting-star-12 {
+  top: 33%;
+  left: 92%;
+  animation-name: shooting-star-12;
+  animation-duration: 24s;
+  animation-delay: -3s;
+}
+
+.shooting-star-13 {
+  top: 52%;
+  left: 8%;
+  animation-name: shooting-star-13;
+  animation-duration: 15s;
+  animation-delay: -8s;
+}
+
+.shooting-star-14 {
+  top: 58%;
+  left: 92%;
+  animation-name: shooting-star-14;
+  animation-duration: 18s;
+  animation-delay: -2s;
+}
+
+.shooting-star-15 {
+  top: 75%;
+  left: 8%;
+  animation-name: shooting-star-15;
+  animation-duration: 13s;
+  animation-delay: -11s;
+}
+
+.shooting-star-16 {
+  top: 80%;
+  left: 92%;
+  animation-name: shooting-star-16;
+  animation-duration: 20s;
+  animation-delay: -6s;
+}
+
+/* Shape shared by all sixteen (only the rotate angle and travel distance
+   differ): appear instantly, hold at full brightness while traveling,
+   then fade out over the last stretch of the trip — a distinct "hold"
+   before the fade is what makes each pass read as a real streak instead
+   of an instant blink. */
+@keyframes shooting-star-1 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(18deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(18deg) translateX(144px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(18deg) translateX(240px);
+  }
+}
+
+@keyframes shooting-star-2 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(195deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(195deg) translateX(120px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(195deg) translateX(200px);
+  }
+}
+
+@keyframes shooting-star-3 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(-22deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(-22deg) translateX(132px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(-22deg) translateX(220px);
+  }
+}
+
+@keyframes shooting-star-4 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(165deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(165deg) translateX(126px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(165deg) translateX(210px);
+  }
+}
+
+@keyframes shooting-star-5 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(25deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(25deg) translateX(132px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(25deg) translateX(220px);
+  }
+}
+
+@keyframes shooting-star-6 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(205deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(205deg) translateX(108px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(205deg) translateX(180px);
+  }
+}
+
+@keyframes shooting-star-7 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(-15deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(-15deg) translateX(156px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(-15deg) translateX(260px);
+  }
+}
+
+@keyframes shooting-star-8 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(160deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(160deg) translateX(120px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(160deg) translateX(200px);
+  }
+}
+
+@keyframes shooting-star-9 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(10deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(10deg) translateX(120px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(10deg) translateX(200px);
+  }
+}
+
+@keyframes shooting-star-10 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(175deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(175deg) translateX(138px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(175deg) translateX(230px);
+  }
+}
+
+@keyframes shooting-star-11 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(-12deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(-12deg) translateX(108px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(-12deg) translateX(180px);
+  }
+}
+
+@keyframes shooting-star-12 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(185deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(185deg) translateX(150px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(185deg) translateX(250px);
+  }
+}
+
+@keyframes shooting-star-13 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(30deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(30deg) translateX(126px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(30deg) translateX(210px);
+  }
+}
+
+@keyframes shooting-star-14 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(210deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(210deg) translateX(132px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(210deg) translateX(220px);
+  }
+}
+
+@keyframes shooting-star-15 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(-25deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(-25deg) translateX(114px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(-25deg) translateX(190px);
+  }
+}
+
+@keyframes shooting-star-16 {
+  0%,
+  80% {
+    opacity: 0;
+    transform: rotate(170deg) translateX(0);
+  }
+
+  81% {
+    opacity: 1;
+  }
+
+  88% {
+    opacity: 1;
+    transform: rotate(170deg) translateX(144px);
+  }
+
+  94%,
+  100% {
+    opacity: 0;
+    transform: rotate(170deg) translateX(240px);
+  }
+}
+
+/* One-shot streaks pausing mid-cycle would risk freezing on a visible
+   streak, so under prefers-reduced-motion they're hidden outright instead
+   (same reasoning as the rest of the hero's motion, see hero.modules.css). */
+@media (prefers-reduced-motion: reduce) {
+  .shooting-star {
+    animation: none;
+    opacity: 0;
+  }
+}

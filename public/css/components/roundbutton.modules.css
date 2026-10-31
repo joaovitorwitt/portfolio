@@ -1,0 +1,53 @@
+.large-button-container {
+  display: flex;
+}
+
+.large-button {
+  width: 15rem;
+  height: 15rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--title-font-family);
+  font-size: 3rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  margin: auto;
+  text-align: center;
+  color: var(--default-text-color);
+}
+
+.button-fill {
+  position: relative;
+  outline: 2px solid var(--default-text-color);
+  transition: color 0.25s;
+  overflow: hidden;
+}
+
+.button-fill:hover {
+  color: var(--default-background-color);
+}
+
+.button-fill::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  background-color: var(--default-text-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  transform: scale(0);
+  transform-origin: bottom left;
+  transition: transform 0.5s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.large-button.button-fill::before {
+  border-radius: 50%;
+}
+
+.button-fill:hover::before,
+.button-fill:focus::before {
+  transform: scale(1);
+}

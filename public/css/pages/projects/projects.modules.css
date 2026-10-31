@@ -1,0 +1,97 @@
+.projects-page-wrapper {
+  min-height: 100vh;
+}
+
+.title {
+  font-family: var(--title-font-family);
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.main-title-projects {
+  font-size: 4rem;
+  text-align: center;
+  margin: 3rem 0;
+  font-family: var(--title-font-family);
+  text-transform: uppercase;
+  font-weight: 300;
+}
+
+.card-image {
+  height: 30rem;
+  background-color: #b3bbce;
+  margin-bottom: 2.5rem;
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.25s;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1rem;
+}
+
+.portfolio-card:hover .card-image,
+.portfolio-card:focus .card-image {
+  background-color: #ff7575;
+}
+
+.card-heading {
+  color: var(--default-text-color);
+}
+
+.card-title {
+  font-size: 2rem;
+}
+
+.card-subtitle {
+  font-size: 1.4rem;
+  opacity: 0.8;
+}
+
+.portfolio-cards {
+  gap: 2.5rem;
+}
+
+.large-button-container {
+  display: flex;
+}
+
+@media screen and (min-width: 768px) {
+  .portfolio-cards {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  .portfolio-card-1 {
+    grid-column: 1/6;
+    grid-row: 1 / span 10;
+  }
+
+  .portfolio-card-2 {
+    grid-column: 6/-1;
+    grid-row: 2 / span 10;
+  }
+
+  .portfolio-card-3 {
+    grid-column: 1/5;
+    grid-row: 11 / span 10;
+  }
+
+  .portfolio-card-4 {
+    grid-column: 5/-1;
+    grid-row: 12 / span 10;
+  }
+
+  .portfolio-card-5 {
+    grid-column: 4/-1;
+    grid-row: 22 / span 10;
+  }
+
+  .portfolio-card-6 {
+    grid-column: 1/4;
+    grid-row: 21 / span 10;
+  }
+}

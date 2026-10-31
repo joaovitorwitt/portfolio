@@ -1,0 +1,289 @@
+.section {
+  padding-block: var(--section-vertical-spacing);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.section:not(.hero)::before {
+  content: "";
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw;
+  height: 80vw;
+  background-color: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(255, 101, 118, 0.08) 0%,
+    rgba(255, 101, 118, 0) 100%
+  );
+  z-index: -1;
+}
+
+.title {
+  font-family: var(--title-font-family);
+  font-weight: 300;
+  text-transform: uppercase;
+}
+
+.main-title {
+  font-size: clamp(5rem, 10vw, 10rem);
+  z-index: 1;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/************************************/
+/* GRAVITATIONAL LENSING */
+/************************************/
+/* A decorative particle stream (Hero.tsx canvas drawing, not the DOM star
+   field below) orbiting close to the black hole and stretching into a
+   streak near the photon sphere. Sized proportionally to .shadow's 20vw
+   so the canvas's internal "photon sphere" radius keeps lining up with
+   the shadow's actual rendered edge at any viewport width. z-index:-1
+   (a *negative* value, not positive) is deliberate: .black-hole-scroll
+   establishes its own stacking context (it has a non-none `transform`),
+   so it paints as a single unit at the "auto/0" level — a negative
+   z-index here is what keeps this layer behind that whole unit (so
+   .shadow correctly occludes it) while still staying in front of the
+   z-index:-2 star field. */
+.lensing-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34vw;
+  height: 34vw;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/************************************/
+/* STARS FEATURE */
+/************************************/
+.stars-overflow {
+  z-index: -2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+/* Mouse parallax: each layer drifts by a different amount (set in
+   Hero.tsx, near moves more than far) toward the cursor, reinforcing the
+   depth cue their size/speed/brightness already establish. The transition
+   smooths the per-frame updates into a gentle drift rather than a jittery
+   1:1 cursor follow. Falls back to 0px (no motion) when the custom
+   properties are never set, which is what happens under
+   prefers-reduced-motion, since Hero.tsx skips attaching the listeners
+   entirely in that case. */
+.stars-overflow.-near {
+  transform: translate(var(--parallax-near-x, 0px), var(--parallax-near-y, 0px));
+  transition: transform 0.2s ease-out;
+}
+
+.stars-overflow.-far {
+  transform: translate(var(--parallax-far-x, 0px), var(--parallax-far-y, 0px));
+  transition: transform 0.2s ease-out;
+}
+
+/* Each star gets its own zero-size, centered pivot that only rotates. The
+   dot inside is offset outward by its own radius, so rotating the pivot
+   sweeps it around a circle centered on the black hole. Randomized duration,
+   a negative delay (starting angle), and direction (per star, in Hero.tsx)
+   are what make the field read as scattered orbits instead of one rigid
+   rotating disk. */
+.star-orbit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  animation-name: orbit;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Size and centering offset (top/left) are set per-star inline in
+   Hero.tsx, since size now varies star-to-star rather than being fixed. */
+.star-dot {
+  position: absolute;
+  border-radius: 50%;
+  background-color: var(--default-text-color);
+  animation-name: twinkle;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* "far" stars are dimmer than "near" ones (their smaller size range and
+   much slower orbit are set per-star in Hero.tsx), which together is what
+   reads as parallax depth. */
+.star-dot.-far {
+  animation-name: twinkle-far;
+}
+
+/* A small fraction of stars get a faint hue instead of plain white. Mixing
+   the tint into `--default-text-color` (rather than a hardcoded color) is
+   what keeps these theme-correct for free: pale blue/amber against the dark
+   theme's white, muted blue/warm-gray against the light theme's dark text. */
+.star-dot.-blue {
+  background-color: color-mix(in srgb, var(--default-text-color) 78%, #6ea8ff 22%);
+}
+
+.star-dot.-amber {
+  background-color: color-mix(in srgb, var(--default-text-color) 78%, #ffb677 22%);
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes twinkle {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes twinkle-far {
+  0% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 0.08;
+  }
+}
+
+/* BLACK HOLE STUFF */
+
+/* Scroll-linked shrink/fade lives on this wrapper, not .black-hole-wrapper
+   itself: that element's one-shot intro animation uses
+   animation-fill-mode:both, so after it finishes the animation system
+   keeps supplying its last keyframe's transform (scale(1)) for that
+   element — a transform set here directly would just get silently
+   overridden. This outer div has no animation of its own, so no conflict.
+   No transition (unlike the mouse-parallax layers below) — this should
+   track scroll position tightly, not lag behind it. */
+.black-hole-scroll {
+  transform: scale(calc(1 - var(--scroll-progress, 0) * 0.35));
+  opacity: calc(1 - var(--scroll-progress, 0) * 0.6);
+}
+
+.black-hole-wrapper {
+  z-index: -99;
+  display: flex;
+  justify-content: center;
+  animation-name: blackHoleInit;
+  animation-duration: 2s;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+  transition-timing-function: ease-out;
+}
+
+@keyframes blackHoleInit {
+  0% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  97% {
+    transform: scale(0.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.shadow {
+  width: 20vw;
+  height: 20vw;
+  background-color: var(--black-hole-color);
+  border-radius: 100%;
+  grid-area: shadow;
+  box-shadow: 4px 6px 20px 2px var(--black-hole-color);
+  z-index: 5;
+  animation:
+    shadow 2s ease-in-out 0.5s infinite alternate,
+    flare 40s ease-in-out infinite;
+}
+
+@keyframes shadow {
+  0% {
+    transform: rotate(10deg);
+  }
+  20% {
+    transform: rotate(30deg);
+  }
+  40% {
+    transform: rotate(20deg);
+  }
+  50% {
+    transform: rotate(50deg);
+  }
+  70% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+/* A slow, rare "breath" in the glow rather than a constant pulse — most of
+   the cycle sits at the normal glow, briefly widening around the 96% mark
+   before easing back. */
+@keyframes flare {
+  0%,
+  92%,
+  100% {
+    box-shadow: 4px 6px 20px 2px var(--black-hole-color);
+  }
+
+  96% {
+    box-shadow: 4px 6px 34px 8px var(--black-hole-color);
+  }
+}
+
+/* Every animation in this section is decorative, so under
+   prefers-reduced-motion we stop them rather than offer a "gentler"
+   version. Orbiting/twinkling stars just pause wherever their randomized
+   phase happens to land (still a scattered, varied-looking field, just
+   still), which is why those use animation-play-state instead of
+   animation:none. The intro animation is a one-shot, not a loop, but its
+   scale swing is still a real "zoom," so it's skipped in favor of
+   appearing immediately at rest. (Shooting stars have their own
+   reduced-motion handling in shooting-stars.modules.css.) */
+@media (prefers-reduced-motion: reduce) {
+  .star-orbit,
+  .star-dot,
+  .shadow {
+    animation-play-state: paused;
+  }
+
+  .black-hole-wrapper {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+}

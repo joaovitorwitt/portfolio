@@ -1,0 +1,61 @@
+.reading-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.reading-progress-bar {
+  height: 100%;
+  width: 100%;
+  background-color: var(--default-text-color);
+  transform-origin: left;
+  transform: scaleX(var(--reading-progress, 0));
+}
+
+.back-to-top {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 50%;
+  border: 2px solid var(--default-text-color);
+  background-color: var(--default-background-color);
+  color: var(--default-text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(1rem);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    color 0.25s ease;
+  z-index: 999;
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-to-top:hover,
+.back-to-top:focus-visible {
+  background-color: var(--default-text-color);
+  color: var(--default-background-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: opacity 0.01ms;
+  }
+}
