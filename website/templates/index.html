@@ -10,11 +10,35 @@
   <link rel="stylesheet" href="/css/components/shooting-stars.modules.css">
 {%- endblock %}
 
+{% block scripts %}
+  <script src="/js/hero.js" defer></script>
+{%- endblock %}
+
 {% block body %}
   {% include 'partials/shooting_stars.html' %}
   {% include 'partials/header.html' %}
 
-  {#- The hero (black hole, star field, lensing canvas) lands in phase 5. #}
+  <section class="hero section">
+    <div class="container">
+      {#- hero.js draws the lensing particles and fills both star layers. #}
+      <canvas class="lensing-canvas"></canvas>
+
+      <div class="black-hole-scroll">
+        <div class="black-hole-wrapper">
+          <div class="doppler-beaming"></div>
+          <div class="photon-ring"></div>
+          <div class="accretion-disk"></div>
+          <div class="backdrop"></div>
+          <div class="shadow"></div>
+        </div>
+      </div>
+
+      {#- Two layers so mouse parallax can move them at different strengths:
+          near stars drift more than far ones. #}
+      <div class="stars-overflow -near"></div>
+      <div class="stars-overflow -far"></div>
+    </div>
+  </section>
 
   {%- if articles %}
   <section class="articles-section section" id="articles">
