@@ -33,7 +33,16 @@ PREPARE_THRESHOLD = None if os.environ.get('USE_TRANSACTION_POOLER') else 5
 CONTENT_KINDS = ('article', 'project')
 
 # Site-wide metadata, the same values the Next.js root layout declared.
-SITE_URL = 'https://www.joaovitorwitt.com'
+# Absolute links (canonical/OpenGraph URLs, RSS, sitemap, share links) point
+# here. An explicit SITE_URL wins; on Vercel it otherwise follows the project's
+# production domain, which is the .vercel.app one until a custom domain is
+# attached and then switches over by itself.
+_PRODUCTION_HOST = os.environ.get('VERCEL_PROJECT_PRODUCTION_URL')
+SITE_URL = os.environ.get('SITE_URL') or (
+    f'https://{_PRODUCTION_HOST}'
+    if _PRODUCTION_HOST
+    else 'https://www.joaovitorwitt.com'
+)
 SITE_TITLE = 'João Vitor Witt'
 SITE_DESCRIPTION = 'Passionate about programing, math, and physics.'
 SITE_CREATOR = 'João Vitor'
