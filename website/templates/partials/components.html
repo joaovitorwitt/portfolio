@@ -1,0 +1,20 @@
+{#- Small building blocks shared by several pages. -#}
+
+{#- Stands in for next/image: same width/height attributes (the CSS sizes the
+    rendered box), lazy unless `priority`, which loads it eagerly with high
+    fetch priority the way <Image priority> did. -#}
+{% macro image(src, alt, width=1920, height=1080, class='', style='', priority=False) -%}
+<img src="{{ src }}" alt="{{ alt }}" width="{{ width }}" height="{{ height }}"
+  {%- if class %} class="{{ class }}"{% endif %}
+  {%- if style %} style="{{ style }}"{% endif %}
+  {%- if priority %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
+{%- endmacro %}
+
+{% macro round_button(url, text) -%}
+<a href="{{ url }}" class="large-button button-fill">{{ text }}</a>
+{%- endmacro %}
+
+{#- Card subtitle used by the home page and related articles. -#}
+{% macro article_subtitle(article) -%}
+{{ article.created_at | date }}{% if article.tags %} · {{ article.tags | join(', ') }}{% endif %}
+{%- endmacro %}
