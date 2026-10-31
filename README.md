@@ -59,6 +59,20 @@ python scripts/import_articles.py
 
 ## Deployment
 
-Vercel detects the Flask app from `app.py` with zero configuration. Set
-`DATABASE_URL` and `USE_TRANSACTION_POOLER` in the project's environment
-variables.
+Vercel deploys every push through its GitHub integration: `main` goes to
+production, other branches to preview URLs. It detects the Flask app from
+`app.py` with no build step. `vercel.json` pins the function to São Paulo
+(`gru1`), next to the Supabase pooler, and keeps `public/`, `migrations/` and
+`scripts/` out of the function bundle.
+
+Project environment variables:
+
+| Name | Value |
+| --- | --- |
+| `DATABASE_URL` | Supabase transaction pooler URI (port 6543) |
+| `USE_TRANSACTION_POOLER` | `1` |
+| `SITE_URL` | optional; defaults to the project's production domain |
+
+Pages are cached for 5 minutes by browsers (`Cache-Control`) and by Vercel's
+CDN (`Vercel-CDN-Cache-Control`, which never reaches the browser), so a new
+article shows up within about five minutes of being inserted.
