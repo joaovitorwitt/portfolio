@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import image %}
+{%- from 'partials/icons.html' import icon %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/components/reveal.modules.css">
+  <link rel="stylesheet" href="/css/pages/about/about.modules.css">
+  <link rel="stylesheet" href="/css/components/pageglow.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div>
+  {#- Phase 5 wraps everything below in the .reveal fade-in. Without reveal.js
+      in place yet, that class would keep the page invisible. #}
+  <div>
+    {% include 'partials/header.html' %}
+    <div class="page-glow"></div>
+    <div class="container">
+      <div class="about-me-wrapper">
+        <div class="profile-picture">
+          {{ image('/img/profile-picture.jpg', '', width=800, height=800, class='about-me-picture', style='height: auto', priority=True) }}
+        </div>
+
+        <div class="about-me-data-container">
+          <h3>João Vitor Witt (pronounced: John)</h3>
+
+          <p class="about-me-description">
+            I&#39;m enthusiastic about exploring the fields of mathematics,
+            physics, and computer science.
+            <a href="/articles" class="article-redirection"><strong>Check out my articles</strong></a>
+          </p>
+
+          <div class="lower-section-data-container">
+            <div class="social-media">
+              <h4 class="about-me-footer">Connect with me</h4>
+              <ul class="list">
+                <li class="list-item">
+                  <a href="https://github.com/joaovitorwitt" target="_blank" class="list-link" rel="noreferrer" aria-label="GitHub">
+                    {{ icon('github', style='font-size: 2.5rem') }}
+                  </a>
+                </li>
+
+                <li class="list-item">
+                  <a href="https://www.youtube.com/channel/UCPeHjk3fEPzK0RKHpQG7gJw" target="_blank" class="list-link" rel="noreferrer" aria-label="YouTube">
+                    {{ icon('youtube', style='font-size: 2.5rem') }}
+                  </a>
+                </li>
+
+                <li class="list-item">
+                  <a href="https://www.linkedin.com/in/joaovitorwitt/" target="_blank" class="list-link" rel="noreferrer" aria-label="LinkedIn">
+                    {{ icon('linkedin', style='font-size: 2.5rem') }}
+                  </a>
+                </li>
+
+                <li>
+                  <a href="https://twitter.com/joaovitorwitt" target="_blank" class="list-link" rel="noreferrer" aria-label="X (Twitter)">
+                    {{ icon('x-twitter', style='font-size: 2.5rem') }}
+                  </a>
+                </li>
+
+                <li>
+                  <a href="https://www.instagram.com/joaaovitorwitt/" target="_blank" class="list-link" rel="noreferrer" aria-label="Instagram">
+                    {{ icon('instagram', style='font-size: 2.5rem') }}
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <button class="download-resume-btn">
+            <a href="/resume/Resume.pdf" download>
+              {{ icon('file', style='font-size: 2.4rem; margin-right: .6rem') }}Download CV
+            </a>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{%- endblock %}

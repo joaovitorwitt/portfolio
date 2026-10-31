@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import image, round_button %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/pages/projects/projects.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div class="projects-page-wrapper">
+  {% include 'partials/header.html' %}
+  <div class="container">
+    <h1 class="title main-title-projects">Explore my personal projects where ideas come to life</h1>
+
+    <div class="loading-container-wrapper">
+      <div class="portfolio-cards d-grid">
+        {%- for project in projects %}
+        <a href="/projects/{{ project.slug }}" class="portfolio-card portfolio-card-{{ loop.index0 % 6 + 1 }}">
+          <div class="card-image">
+            {%- if project.image_url %}
+            {{ image(project.image_url | cloudinary(800), project.title, priority=True) }}
+            {%- endif %}
+          </div>
+          <div class="card-heading">
+            <h5 class="card-title">{{ project.title }}</h5>
+            <span class="card-subtitle">{{ project.description }}</span>
+          </div>
+        </a>
+        {%- endfor %}
+      </div>
+    </div>
+
+    <div class="portfolio-card large-button-container" style="padding-top: 3rem; padding-bottom: 3rem">
+      {{ round_button('/', 'Return') }}
+    </div>
+  </div>
+</div>
+{%- endblock %}

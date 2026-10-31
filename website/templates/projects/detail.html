@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{%- from 'partials/components.html' import image, round_button %}
+{%- from 'partials/icons.html' import icon %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/css/pages/project/project.modules.css">
+  <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
+{%- endblock %}
+
+{% block body %}
+<div class="project-page-wrapper">
+  {% include 'partials/header.html' %}
+  <div class="container">
+    <section class="project-wrapper">
+      <div class="project-container">
+        <div class="project-image-data">
+          {%- if project.image_url %}
+          {{ image(project.image_url | cloudinary(1200), project.title, priority=True) }}
+          {%- endif %}
+        </div>
+        <div class="project-data">
+          <div class="project-data-main">
+            <h2 class="project-data-title">{{ project.title }}</h2>
+            <p class="project-data-description">{{ project.description }}</p>
+            {%- if project.repo_url %}
+            <a href="{{ project.repo_url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ project.title }} on GitHub">
+              {{ icon('github', style='font-size: 2.5rem; margin-top: 1rem') }}
+            </a>
+            {%- endif %}
+          </div>
+        </div>
+        <div class="large-button-container" style="margin-top: 2rem">
+          {{ round_button('/projects', 'Return') }}
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{%- endblock %}
