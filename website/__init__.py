@@ -43,8 +43,10 @@ def create_app() -> Flask:
             'now_year': datetime.now(UTC).year,
         }
 
+    from website import filters
     from website.views import bp
 
+    filters.register(app)
     app.register_blueprint(bp)
 
     return app
