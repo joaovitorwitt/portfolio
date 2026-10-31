@@ -74,6 +74,13 @@ def create_app() -> Flask:
             f'public, max-age={settings.CACHE_MAX_AGE}, '
             f'stale-while-revalidate={settings.CACHE_STALE_WHILE_REVALIDATE}'
         )
+        # Vercel's CDN only caches function responses that carry s-maxage.
+        # This header is read by Vercel alone and never reaches the browser,
+        # so the Cache-Control above is exactly what visitors see.
+        response.headers['Vercel-CDN-Cache-Control'] = (
+            f'public, s-maxage={settings.CACHE_MAX_AGE}, '
+            f'stale-while-revalidate={settings.CACHE_STALE_WHILE_REVALIDATE}'
+        )
         response.add_etag()
         return response.make_conditional(request)
 
