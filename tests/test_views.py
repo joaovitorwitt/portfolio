@@ -1,5 +1,11 @@
+from pathlib import Path
+
 import pytest
-from conftest import SITE_URL
+from conftest import BLOB_URL, SITE_URL, FakeRepository, make_content
+
+import settings
+import website.views
+from website import create_app
 
 
 @pytest.mark.parametrize(
@@ -123,3 +129,69 @@ def test_public_files_do_not_get_page_cache_headers(client):
 
     assert response.status_code == 200
     assert 'Vercel-CDN-Cache-Control' not in response.headers
+
+
+def test_covers_carry_their_stored_size_and_alt(client):
+    html = client.get('/articles/newest').text
+
+    assert 'alt="Newest article" width="1000" height="500"' in html
+
+
+def test_cover_without_a_stored_size_falls_back_to_16_by_9(monkeypatch, rows):
+    rows[0] |= {'image_width': None, 'image_height': None}
+    monkeypatch.setattr(website.views, 'repository', FakeRepository(rows))
+
+    html = create_app().test_client().get('/articles/newest').text
+
+    assert 'alt="Newest article" width="1920" height="1080"' in html
+
+
+def test_covers_share_their_size_with_link_unfurls(client):
+    html = client.get('/articles/newest').text
+
+    assert '<meta property="og:image:width" content="1000">' in html
+    assert '<meta property="og:image:height" content="500">' in html
+
+
+def test_covers_are_resized_on_vercel(monkeypatch, client):
+    monkeypatch.setattr(settings, 'ON_VERCEL', True)
+
+    html = client.get('/articles/newest').text
+
+    assert 'src="/_vercel/image?url=' in html
+    assert 'srcset="/_vercel/image?url=' in html
+    assert 'sizes="(max-width: 900px) 100vw, 900px"' in html
+
+
+def test_inline_images_are_rewritten_on_article_pages(monkeypatch, rows):
+    monkeypatch.setattr(settings, 'ON_VERCEL', True)
+    rows[0]['content'] = f"<img src='{BLOB_URL}/a.png' alt='Axis'>"
+    monkeypatch.setattr(website.views, 'repository', FakeRepository(rows))
+
+    html = create_app().test_client().get('/articles/newest').text
+
+    assert '<div class="article-body"><img src="/_vercel/image?url=' in html
+
+
+def test_homepage_cards_take_images_from_the_database(monkeypatch, rows):
+    rows.append(make_content('halting', kind='project'))
+    monkeypatch.setattr(website.views, 'repository', FakeRepository(rows))
+
+    html = create_app().test_client().get('/').text
+
+    assert f'{BLOB_URL}/images/project/halting/abc123.png" alt="Halting"' in html
+
+
+def test_nothing_rendered_or_in_a_template_mentions_cloudinary(client):
+    for path in (
+        '/',
+        '/about',
+        '/articles',
+        '/articles/newest',
+        '/projects',
+        '/rss.xml',
+    ):
+        assert 'cloudinary' not in client.get(path).text
+
+    for template in Path('website/templates').rglob('*.html'):
+        assert 'cloudinary' not in template.read_text(encoding='utf-8')

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import image, round_button, article_subtitle %}
+{%- from 'partials/components.html' import cover, round_button, article_subtitle %}
 
 {% block styles %}
   <link rel="stylesheet" href="/css/pages/article/article.modules.css">
@@ -38,14 +38,14 @@
         </div>
 
         {%- if article.image_url %}
-        {{ image(article.image_url | cloudinary(1600), article.title, priority=True) }}
+        {{ cover(article, display=1600, sizes='(max-width: 900px) 100vw, 900px', priority=True) }}
         {%- endif %}
       </div>
 
       <div class="container">
         {%- if article.content %}
         {#- Authored HTML from the database, rendered as-is. #}
-        <div>{{ article.content | safe }}</div>
+        <div class="article-body">{{ article.content | responsive_images | safe }}</div>
         {%- endif %}
       </div>
 
@@ -63,7 +63,7 @@
         <a href="/articles/{{ item.slug }}" class="related-article-card">
           <div class="card-image">
             {%- if item.image_url %}
-            {{ image(item.image_url | cloudinary(800), item.title) }}
+            {{ cover(item, sizes='(max-width: 767px) 100vw, 33vw') }}
             {%- endif %}
           </div>
 

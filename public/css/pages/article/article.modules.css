@@ -29,6 +29,11 @@
   border-radius: 10px;
 }
 
+/* The width and height attributes reserve the ratio; narrow screens scale down. */
+.article-body img {
+  height: auto;
+}
+
 .blog-post-container.container {
   max-width: 90rem;
   padding: 0;

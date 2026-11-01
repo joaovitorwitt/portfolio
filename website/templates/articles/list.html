@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import image, round_button %}
+{%- from 'partials/components.html' import cover, round_button %}
 
 {% block styles %}
   <link rel="stylesheet" href="/css/pages/articles/articles.modules.css">
@@ -17,7 +17,7 @@
         <div class="article-wrapper">
           <div class="posts-article-image-wrapper">
             {%- if article.image_url %}
-            {{ image(article.image_url | cloudinary(800), article.title, class='article-image') }}
+            {{ cover(article, sizes='(max-width: 767px) 100vw, 33vw', class='article-image') }}
             {%- endif %}
           </div>
 
