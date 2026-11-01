@@ -8,6 +8,7 @@ import website.views
 from website import create_app
 
 SITE_URL = 'https://site.test'
+BLOB_URL = 'https://store1.public.blob.vercel-storage.com'
 
 
 def make_content(slug: str, kind: str = 'article', **overrides) -> dict:
@@ -19,7 +20,9 @@ def make_content(slug: str, kind: str = 'article', **overrides) -> dict:
         'slug': slug,
         'description': f'Description of {slug}',
         'content': f'<p>Body of {slug}</p>',
-        'image_url': f'https://res.cloudinary.com/demo/image/upload/{slug}.png',
+        'image_url': f'{BLOB_URL}/images/{kind}/{slug}/abc123.png',
+        'image_width': 1000,
+        'image_height': 500,
         'repo_url': None,
         'tags': ['physics'],
         'created_at': datetime(2024, 10, 12, 15, 30, tzinfo=UTC),
