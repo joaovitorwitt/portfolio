@@ -9,7 +9,7 @@
     "remotePatterns": [
       {
         "protocol": "https",
-        "hostname": "^STORE_ID\\.public\\.blob\\.vercel-storage\\.com$"
+        "hostname": "^yvzbsbjftoc3l8rk\\.public\\.blob\\.vercel-storage\\.com$"
       }
     ],
     "localPatterns": [{ "pathname": "^/img/.*$", "search": "" }]
