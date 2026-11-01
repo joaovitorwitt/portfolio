@@ -24,6 +24,12 @@ case $1 in
 
     ;;
 
+    test)
+
+    python -m pytest "${@:2}"
+
+    ;;
+
     lint)
 
     ruff check . && ruff format --check .
@@ -31,7 +37,7 @@ case $1 in
     ;;
 
     *)
-        echo "Option not found, use one of these: server, install, lint"
+        echo "Option not found, use one of these: server, install, test, lint"
         exit 1
     ;;
 esac

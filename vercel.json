@@ -3,7 +3,7 @@
   "regions": ["gru1"],
   "functions": {
     "app.py": {
-      "excludeFiles": "{public/**,migrations/**,scripts/**}"
+      "excludeFiles": "{public/**,migrations/**,scripts/**,tests/**}"
     }
   }
 }

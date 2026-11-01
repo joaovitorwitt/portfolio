@@ -33,6 +33,7 @@ python -m venv .venv
 ./run.sh install          # runtime + dev requirements into .venv
 cp .env.example .env      # then fill in DATABASE_URL
 ./run.sh server           # http://localhost:8000
+./run.sh test             # pytest, never touches a database
 ./run.sh lint             # ruff check + format check
 ```
 
