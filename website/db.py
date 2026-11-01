@@ -1,6 +1,7 @@
 import logging
 from functools import lru_cache
 
+from psycopg import sql
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
@@ -18,6 +19,8 @@ CONTENT_COLUMNS = (
     'description',
     'content',
     'image_url',
+    'image_width',
+    'image_height',
     'repo_url',
     'tags',
     'created_at',
@@ -112,3 +115,68 @@ class ContentRepository:
             row = conn.execute(query, (kind, slug)).fetchone()
 
         return row
+
+
+class ContentImages:
+    """
+    Write access for the image migration in scripts/, kept apart from
+    ContentRepository so that the site itself stays read-only.
+    """
+
+    def references(self) -> list[dict]:
+        """
+        What the backup needs. It runs before migration 003, so it can't ask for
+        the size columns.
+        """
+        # A stable order, so the first row using a shared image always names it.
+        query = 'SELECT kind, slug, image_url, content FROM content ORDER BY kind, slug'
+
+        with get_pool().connection() as conn:
+            return conn.execute(query).fetchall()
+
+    def rows(self) -> list[dict]:
+        query = (
+            'SELECT id, kind, slug, image_url, image_width, image_height, content '
+            'FROM content ORDER BY kind, slug'
+        )
+
+        with get_pool().connection() as conn:
+            return conn.execute(query).fetchall()
+
+    def apply(self, updates: list[dict], backup_table: str) -> None:
+        """
+        Copies the table, applies every update and checks that no Cloudinary URL
+        is left, all in one transaction: any failure rolls the whole thing back.
+        """
+        backup = sql.Identifier(backup_table)
+        update = """
+            UPDATE content
+            SET image_url = %(image_url)s,
+                image_width = %(image_width)s,
+                image_height = %(image_height)s,
+                content = %(content)s
+            WHERE id = %(id)s
+        """
+        remaining = """
+            SELECT count(*) AS remaining FROM content
+            WHERE image_url LIKE %(pattern)s OR content LIKE %(pattern)s
+        """
+
+        with get_pool().connection() as conn:
+            conn.execute(
+                sql.SQL('CREATE TABLE IF NOT EXISTS {} AS TABLE content').format(backup)
+            )
+            # Tables in Supabase's public schema are reachable through its REST
+            # API. The script connects as the owner, which RLS does not restrict.
+            conn.execute(
+                sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(backup)
+            )
+
+            for row in updates:
+                conn.execute(update, row)
+
+            left = conn.execute(remaining, {'pattern': '%cloudinary%'}).fetchone()
+            if left['remaining']:
+                raise RuntimeError(
+                    f'{left["remaining"]} rows still reference Cloudinary, rolled back'
+                )

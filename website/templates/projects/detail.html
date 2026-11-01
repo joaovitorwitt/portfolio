@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import image, round_button %}
+{%- from 'partials/components.html' import cover, round_button %}
 {%- from 'partials/icons.html' import icon %}
 
 {% block styles %}
@@ -15,7 +15,7 @@
       <div class="project-container">
         <div class="project-image-data">
           {%- if project.image_url %}
-          {{ image(project.image_url | cloudinary(1200), project.title, priority=True) }}
+          {{ cover(project, display=1200, sizes='(max-width: 767px) 100vw, 60vw', priority=True) }}
           {%- endif %}
         </div>
         <div class="project-data">

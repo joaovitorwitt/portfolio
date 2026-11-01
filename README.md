@@ -58,6 +58,31 @@ python scripts/import_articles.py --dry-run
 python scripts/import_articles.py
 ```
 
+## Images
+
+Originals live in a public Vercel Blob store, named
+`images/<kind>/<slug>/<sha256-12>.<ext>`. The content hash makes each URL
+immutable. On Vercel the `img_url` filter sends them through Vercel Image
+Optimization (`/_vercel/image`, configured under `images` in `vercel.json`) for
+resized AVIF/WebP copies. Locally that endpoint doesn't exist, so images load
+straight from their Blob URLs and no Vercel service is needed.
+
+Cover sizes are stored in `image_width` and `image_height`; inline images carry
+theirs in the markup. A new store means updating `remotePatterns` in
+`vercel.json`.
+
+To move images from Cloudinary (`pip` installs what these need with
+`./run.sh install`):
+
+```bash
+python scripts/export_images.py             # backup to backups/images/, read-only
+python scripts/migrate_images.py --dry-run  # print the changes, no writes
+python scripts/migrate_images.py --apply    # upload, copy the table, rewrite it
+```
+
+`--apply` first copies `content` to `content_backup_<yyyymmdd>`, then rewrites
+every row in one transaction, and rolls back if any Cloudinary URL is left.
+
 ## Deployment
 
 Vercel deploys every push through its GitHub integration: `main` goes to
@@ -73,6 +98,7 @@ Project environment variables:
 | `DATABASE_URL` | Supabase transaction pooler URI (port 6543) |
 | `USE_TRANSACTION_POOLER` | `1` |
 | `SITE_URL` | optional; defaults to the project's production domain |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token, set by connecting the store to the project; also in the local `.env` for the scripts |
 
 Pages are cached for 5 minutes by browsers (`Cache-Control`) and by Vercel's
 CDN (`Vercel-CDN-Cache-Control`, which never reaches the browser), so a new

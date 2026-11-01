@@ -28,6 +28,10 @@ def index():
     return render_template(
         'index.html',
         articles=repository.search(kind='article', limit=3),
+        projects_by_slug={
+            project['slug']: project
+            for project in repository.search(kind='project', limit=LIST_LIMIT)
+        },
     )
 
 
@@ -68,6 +72,8 @@ def article(slug: str):
             'description': item['description'],
             'type': 'article',
             'image': item['image_url'],
+            'image_width': item['image_width'],
+            'image_height': item['image_height'],
             'published_time': item['created_at'],
             'tags': item['tags'],
         },
@@ -94,6 +100,8 @@ def project(slug: str):
             'title': item['title'],
             'description': item['description'],
             'image': item['image_url'],
+            'image_width': item['image_width'],
+            'image_height': item['image_height'],
         },
     )
 

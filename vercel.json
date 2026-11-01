@@ -1,6 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["gru1"],
+  "images": {
+    "sizes": [480, 800, 1200, 1600, 2400],
+    "qualities": [75],
+    "formats": ["image/avif", "image/webp"],
+    "minimumCacheTTL": 2678400,
+    "remotePatterns": [
+      {
+        "protocol": "https",
+        "hostname": "^yvzbsbjftoc3l8rk\\.public\\.blob\\.vercel-storage\\.com$"
+      }
+    ],
+    "localPatterns": [{ "pathname": "^/img/.*$", "search": "" }]
+  },
   "functions": {
     "app.py": {
       "excludeFiles": "{public/**,migrations/**,scripts/**,tests/**}"

@@ -1,13 +1,23 @@
 {#- Small building blocks shared by several pages. -#}
 
-{#- Stands in for next/image: same width/height attributes (the CSS sizes the
-    rendered box), lazy unless `priority`, which loads it eagerly with high
-    fetch priority the way <Image priority> did. -#}
-{% macro image(src, alt, width=1920, height=1080, class='', style='', priority=False) -%}
-<img src="{{ src }}" alt="{{ alt }}" width="{{ width }}" height="{{ height }}"
+{#- Stands in for next/image: width/height attributes (the CSS sizes the rendered
+    box, and images without a stored size fall back to 16:9), lazy unless
+    `priority`, which loads it eagerly with high fetch priority the way
+    <Image priority> did. `display` is the fallback src width; `sizes` tells the
+    browser which srcset candidate fits the layout. -#}
+{% macro image(src, alt, width=None, height=None, display=800, sizes='100vw', class='', style='', priority=False) -%}
+{%- set srcset = src | img_srcset(width) -%}
+<img src="{{ src | img_url(display) }}"
+  {%- if srcset %} srcset="{{ srcset }}" sizes="{{ sizes }}"{% endif %} alt="{{ alt }}" width="{{ width or 1920 }}" height="{{ height or 1080 }}"
   {%- if class %} class="{{ class }}"{% endif %}
   {%- if style %} style="{{ style }}"{% endif %}
   {%- if priority %} fetchpriority="high"{% else %} loading="lazy"{% endif %} decoding="async">
+{%- endmacro %}
+
+{#- A row's cover image. Defaults fit the card grids: full width on phones, at
+    most about half the page from the 768px breakpoint up. -#}
+{% macro cover(item, alt=None, display=800, sizes='(max-width: 767px) 100vw, 50vw', class='', priority=False) -%}
+{{ image(item.image_url, alt or item.title, width=item.image_width, height=item.image_height, display=display, sizes=sizes, class=class, priority=priority) }}
 {%- endmacro %}
 
 {% macro round_button(url, text) -%}

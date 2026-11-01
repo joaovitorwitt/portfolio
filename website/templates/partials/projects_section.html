@@ -1,6 +1,7 @@
-{%- from 'partials/components.html' import image, round_button -%}
-{#- Hand-picked on purpose, not read from the database: these three cards were
-    hardcoded in the Next.js PortfolioSection too. -#}
+{%- from 'partials/components.html' import cover, round_button -%}
+{#- The choice of cards and their copy are hand-picked on purpose: these three
+    were hardcoded in the Next.js PortfolioSection too. Only the images come
+    from the database, so they live in one place. -#}
 <section class="portfolio section" id="portfolio">
   <div class="container">
     <div class="section-title-container">
@@ -14,7 +15,9 @@
     <div class="portfolio-cards d-grid">
       <a href="/projects/halting" class="portfolio-card portfolio-card-1">
         <div class="card-image">
-          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/physics-model-project_oafck7.png' | cloudinary(800), 'Halting') }}
+          {%- if projects_by_slug['halting'] %}
+          {{ cover(projects_by_slug['halting'], alt='Halting') }}
+          {%- endif %}
         </div>
 
         <div class="card-heading">
@@ -25,7 +28,9 @@
 
       <a href="/projects/quantum-programming-project" class="portfolio-card portfolio-card-2">
         <div class="card-image">
-          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/quantum-programming-project_ejqzgb.png' | cloudinary(800), 'Quantum Programming Project') }}
+          {%- if projects_by_slug['quantum-programming-project'] %}
+          {{ cover(projects_by_slug['quantum-programming-project'], alt='Quantum Programming Project') }}
+          {%- endif %}
         </div>
         <div class="card-heading">
           <h5 class="card-title">Quantum Programming Project</h5>
@@ -35,7 +40,9 @@
 
       <a href="/projects/physics-engine" class="portfolio-card portfolio-card-3">
         <div class="card-image">
-          {{ image('https://res.cloudinary.com/djmr9rxjg/image/upload/v1704252733/project-images/blockchain-project-thumb_mvomf0.png' | cloudinary(800), 'Physics Engine') }}
+          {%- if projects_by_slug['physics-engine'] %}
+          {{ cover(projects_by_slug['physics-engine'], alt='Physics Engine') }}
+          {%- endif %}
         </div>
 
         <div class="card-heading">

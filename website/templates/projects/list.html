@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import image, round_button %}
+{%- from 'partials/components.html' import cover, round_button %}
 
 {% block styles %}
   <link rel="stylesheet" href="/css/pages/projects/projects.modules.css">
@@ -18,7 +18,7 @@
         <a href="/projects/{{ project.slug }}" class="portfolio-card portfolio-card-{{ loop.index0 % 6 + 1 }}">
           <div class="card-image">
             {%- if project.image_url %}
-            {{ image(project.image_url | cloudinary(800), project.title, priority=True) }}
+            {{ cover(project, priority=True) }}
             {%- endif %}
           </div>
           <div class="card-heading">
