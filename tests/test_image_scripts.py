@@ -183,6 +183,16 @@ UPDATE = {
 }
 
 
+def test_the_backup_does_not_need_migration_003(monkeypatch):
+    connection = FakeConnection(remaining=0)
+    connection.fetchall = list
+    monkeypatch.setattr(website.db, 'get_pool', lambda: connection)
+
+    ContentImages().references()
+
+    assert 'image_width' not in connection.statements[0][0]
+
+
 def test_apply_backs_up_before_it_updates(monkeypatch):
     connection = FakeConnection(remaining=0)
     monkeypatch.setattr(website.db, 'get_pool', lambda: connection)

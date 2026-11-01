@@ -123,8 +123,18 @@ class ContentImages:
     ContentRepository so that the site itself stays read-only.
     """
 
-    def rows(self) -> list[dict]:
+    def references(self) -> list[dict]:
+        """
+        What the backup needs. It runs before migration 003, so it can't ask for
+        the size columns.
+        """
         # A stable order, so the first row using a shared image always names it.
+        query = 'SELECT kind, slug, image_url, content FROM content ORDER BY kind, slug'
+
+        with get_pool().connection() as conn:
+            return conn.execute(query).fetchall()
+
+    def rows(self) -> list[dict]:
         query = (
             'SELECT id, kind, slug, image_url, image_width, image_height, content '
             'FROM content ORDER BY kind, slug'

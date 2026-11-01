@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from PIL import Image  # noqa: E402
 
-from website.db import ContentImages  # noqa: E402
+from website.db import ContentImages, get_pool  # noqa: E402
 from website.filters import IMG_SRC, IMG_TAG  # noqa: E402
 
 BACKUP_DIR = Path(__file__).resolve().parent.parent / 'backups' / 'images'
@@ -82,7 +82,7 @@ def download(url: str) -> bytes:
 
 
 def main() -> int:
-    references = collect_references(ContentImages().rows())
+    references = collect_references(ContentImages().references())
     manifest = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
 
     total = 0
@@ -113,4 +113,7 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    finally:
+        get_pool().close()

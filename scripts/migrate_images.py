@@ -24,7 +24,7 @@ from vercel.blob.sync import head_blob, put_blob  # noqa: E402
 
 import settings  # noqa: E402, F401  (loads .env, where the Blob SDK finds its token)
 from scripts.export_images import BACKUP_DIR, MANIFEST  # noqa: E402
-from website.db import ContentImages  # noqa: E402
+from website.db import ContentImages, get_pool  # noqa: E402
 from website.filters import IMG_SRC, IMG_TAG, IMG_WIDTH  # noqa: E402
 
 TOKEN_PREFIX = 'vercel_blob_rw_'
@@ -189,4 +189,7 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    finally:
+        get_pool().close()
