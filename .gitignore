@@ -12,6 +12,9 @@ venv/
 # Local seed data; the real content lives in the database
 fixtures/
 
+# Local image backups from scripts/export_images.py
+backups/
+
 # Vercel
 .vercel/
 
