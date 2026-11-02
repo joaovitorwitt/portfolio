@@ -1,8 +1,10 @@
+from datetime import UTC, datetime
+
 import pytest
 
 import settings
 import website.db
-from website.db import ContentRepository, build_conninfo
+from website.db import CONTENT_COLUMNS, ContentRepository, build_conninfo
 
 
 class FakeResult:
@@ -103,3 +105,22 @@ def test_conninfo_falls_back_to_individual_settings(monkeypatch):
 def test_the_guard_stops_tests_reaching_the_real_database():
     with pytest.raises(pytest.fail.Exception):
         ContentRepository().search()
+
+
+def test_adjacent_looks_both_ways_with_bound_parameters(connection):
+    created_at = datetime(2024, 1, 1, tzinfo=UTC)
+
+    result = ContentRepository().adjacent('article', created_at)
+
+    (older, older_params), (newer, newer_params) = connection.calls
+    assert 'created_at < %s ORDER BY created_at DESC LIMIT 1' in older
+    assert 'created_at > %s ORDER BY created_at ASC LIMIT 1' in newer
+    assert older_params == newer_params == ('article', created_at)
+    assert set(result) == {'previous', 'next'}
+
+
+def test_body_md_stays_out_of_what_pages_read():
+    assert 'body_md' not in CONTENT_COLUMNS
+    assert {'body_html', 'has_math', 'toc', 'word_count', 'updated_at'} <= set(
+        CONTENT_COLUMNS
+    )
