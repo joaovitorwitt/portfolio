@@ -1,6 +1,14 @@
 -r requirements.txt
 
+beautifulsoup4==4.15.0
+html5lib==1.1
+latex2mathml==3.81.1
+markdown-it-py==4.2.0
+markdownify==1.2.3
+mdit-py-plugins==0.6.1
+nh3==0.3.7
 pillow==13.0.0
+pygments==2.21.0
 pytest==9.2.0
 ruff==0.17.3
 vercel-blob==0.5.0
