@@ -13,9 +13,9 @@ WORDS_PER_MINUTE = 200
 SRCSET_WIDTHS = (480, 800, 1200, 1600)
 IMAGE_QUALITY = 75
 
-# Inline images sit in the 54rem article column.
+# Inline images sit in the article column: .prose is 68ch, about 680px.
 INLINE_IMAGE_WIDTH = 800
-INLINE_IMAGE_SIZES = '(max-width: 540px) 100vw, 540px'
+INLINE_IMAGE_SIZES = '(max-width: 720px) 100vw, 680px'
 
 IMG_TAG = re.compile(r'<img\b[^>]*>', re.IGNORECASE)
 IMG_SRC = re.compile(
@@ -41,13 +41,14 @@ def format_date(value: datetime) -> str:
     return f'{value:%B} {value.day}, {value.year}'
 
 
-def reading_time(html: str) -> int:
-    """
-    Minutes to read an HTML body: tags stripped, words counted, divided by 200
-    and rounded half up the way Math.round did, never below 1.
-    """
-    words = len(_TAG.sub(' ', html).split())
+def minutes_to_read(words: int) -> int:
+    """Divided by 200 and rounded half up the way Math.round did, never below 1."""
     return max(1, math.floor(words / WORDS_PER_MINUTE + 0.5))
+
+
+def reading_time(html: str) -> int:
+    """Minutes to read a legacy HTML body, with its tags stripped."""
+    return minutes_to_read(len(_TAG.sub(' ', html).split()))
 
 
 def _optimizable(url: str | None) -> bool:
@@ -128,6 +129,7 @@ def uri_component(value: str) -> str:
 
 def register(app):
     app.add_template_filter(format_date, 'date')
+    app.add_template_filter(minutes_to_read)
     app.add_template_filter(reading_time)
     app.add_template_filter(img_url)
     app.add_template_filter(img_srcset)

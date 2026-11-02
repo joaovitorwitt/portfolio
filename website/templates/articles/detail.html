@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import cover, round_button, article_subtitle %}
+{%- from 'partials/components.html' import cover, round_button, article_subtitle, toc_list %}
 
 {% block styles %}
   <link rel="stylesheet" href="/css/pages/article/article.modules.css">
@@ -7,14 +7,20 @@
   <link rel="stylesheet" href="/css/components/related-articles.modules.css">
   <link rel="stylesheet" href="/css/components/reading-progress.modules.css">
   <link rel="stylesheet" href="/css/components/share-buttons.modules.css">
+  {%- if article.body_html %}
+  <link rel="stylesheet" href="/css/components/prose.modules.css">
+  <link rel="stylesheet" href="/css/components/code.modules.css">
+  {%- endif %}
+  <link rel="stylesheet" href="/css/pages/article/print.css" media="print">
 {%- endblock %}
 
 {% block scripts %}
   <script src="/js/reading-progress.js" defer></script>
   <script src="/js/share.js" defer></script>
-  {%- if article.content %}
-  {#- Bodies may contain TeX. MathJax's default startup typesets the page
-      once it loads; async keeps it off the critical path. #}
+  {%- if article.content and not article.body_html %}
+  {#- Legacy bodies may contain TeX. MathJax's default startup typesets the
+      page once it loads; async keeps it off the critical path. Rendered bodies
+      carry MathML, which needs no script. #}
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
   {%- endif %}
 {%- endblock %}
@@ -31,10 +37,13 @@
   <section class="blog-post section-header-offset">
     <div class="blog-post-container container">
       <div class="blog-post-data">
-        <h3 class="blog-post-title title">{{ article.title }}</h3>
+        <h1 class="blog-post-title title">{{ article.title }}</h1>
 
         <div class="article-data">
-          <span>{{ article.created_at | date }}{% if article.content %} · {{ article.content | reading_time }} min read{% endif %}</span>
+          <span>{{ article.created_at | date }}{% if article.body_html %} · {{ article.word_count | minutes_to_read }} min read{% elif article.content %} · {{ article.content | reading_time }} min read{% endif %}</span>
+          {%- if article.updated_at | date != article.created_at | date %}
+          <span class="article-updated">Updated on {{ article.updated_at | date }}</span>
+          {%- endif %}
         </div>
 
         {%- if article.image_url %}
@@ -42,21 +51,56 @@
         {%- endif %}
       </div>
 
+      {%- if article.body_html %}
+      {%- set show_toc = article.toc | length >= 3 %}
+      <div class="article-layout{% if show_toc %} has-toc{% endif %}">
+        {%- if show_toc %}
+        {#- The same list twice, because CSS can't open a <details>: one of the two
+            is display: none at any width, which also hides it from screen readers. #}
+        <details class="toc toc-collapsed">
+          <summary>Contents</summary>
+          {{ toc_list(article.toc) }}
+        </details>
+        <nav class="toc toc-side" aria-label="Contents">
+          <p class="toc-title">Contents</p>
+          {{ toc_list(article.toc) }}
+        </nav>
+        {%- endif %}
+        {#- Sanitised by website/markdown.py when it was saved. #}
+        <div class="article-body prose">{{ article.body_html | responsive_images | safe }}</div>
+      </div>
+      {%- elif article.content %}
       <div class="container">
-        {%- if article.content %}
         {#- Authored HTML from the database, rendered as-is. #}
         <div class="article-body">{{ article.content | responsive_images | safe }}</div>
-        {%- endif %}
       </div>
+      {%- endif %}
 
       {% include 'partials/share_buttons.html' %}
     </div>
   </section>
 
+  {%- if adjacent.previous or adjacent.next %}
+  <nav class="article-pagination container" aria-label="More articles">
+    {%- if adjacent.previous %}
+    <a href="/articles/{{ adjacent.previous.slug }}" class="article-pagination-link" rel="prev">
+      <span class="article-pagination-label">Previous article</span>
+      <span class="article-pagination-title">{{ adjacent.previous.title }}</span>
+    </a>
+    {%- endif %}
+    {%- if adjacent.next %}
+    <a href="/articles/{{ adjacent.next.slug }}" class="article-pagination-link is-next" rel="next">
+      <span class="article-pagination-label">Next article</span>
+      <span class="article-pagination-title">{{ adjacent.next.title }}</span>
+    </a>
+    {%- endif %}
+  </nav>
+  {%- endif %}
+
   {%- if related %}
   <section class="related-articles">
     <div class="container">
-      <h4 class="related-articles-title">Related articles</h4>
+      <h2 class="related-articles-title">Related articles</h2>
 
       <div class="related-articles-grid">
         {%- for item in related %}
@@ -68,7 +112,7 @@
           </div>
 
           <div class="card-heading">
-            <h5 class="card-title">{{ item.title }}</h5>
+            <h3 class="card-title">{{ item.title }}</h3>
             <span class="card-subtitle">{{ article_subtitle(item) }}</span>
           </div>
         </a>

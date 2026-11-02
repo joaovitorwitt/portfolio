@@ -20,6 +20,15 @@
 {{ image(item.image_url, alt or item.title, width=item.image_width, height=item.image_height, display=display, sizes=sizes, class=class, priority=priority) }}
 {%- endmacro %}
 
+{#- An article's headings, as stored with its body by website/markdown.py. -#}
+{% macro toc_list(toc) -%}
+<ol class="toc-list">
+  {%- for heading in toc %}
+  <li class="toc-level-{{ heading.level }}"><a href="#{{ heading.id }}">{{ heading.text }}</a></li>
+  {%- endfor %}
+</ol>
+{%- endmacro %}
+
 {% macro round_button(url, text) -%}
 <a href="{{ url }}" class="large-button button-fill">{{ text }}</a>
 {%- endmacro %}

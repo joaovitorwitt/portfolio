@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -81,7 +82,7 @@ def test_article_without_tags_has_no_related_articles(client, rows):
 
     html = client.get('/articles/newest').text
 
-    assert '/articles/middle' not in html
+    assert 'Related articles' not in html
 
 
 def test_article_canonical_url_uses_the_site_url(client):
@@ -195,3 +196,119 @@ def test_nothing_rendered_or_in_a_template_mentions_cloudinary(client):
 
     for template in Path('website/templates').rglob('*.html'):
         assert 'cloudinary' not in template.read_text(encoding='utf-8')
+
+
+def article_with(monkeypatch, rows, **overrides):
+    rows[0].update(overrides)
+    monkeypatch.setattr(website.views, 'repository', FakeRepository(rows))
+    return create_app().test_client().get('/articles/newest').text
+
+
+def test_rendered_body_wins_over_the_legacy_one(monkeypatch, rows):
+    html = article_with(monkeypatch, rows, body_html='<p>Rendered body</p>')
+
+    assert '<div class="article-body prose"><p>Rendered body</p></div>' in html
+    assert 'Body of newest' not in html
+
+
+def test_articles_not_yet_converted_keep_the_legacy_body_and_mathjax(client):
+    html = client.get('/articles/newest').text
+
+    assert '<div class="article-body"><p>Body of newest</p></div>' in html
+    assert 'mathjax' in html
+    assert 'prose.modules.css' not in html
+
+
+def test_rendered_bodies_need_no_mathjax(monkeypatch, rows):
+    html = article_with(
+        monkeypatch, rows, body_html='<p><math></math></p>', has_math=True
+    )
+
+    assert 'mathjax' not in html
+    assert 'prose.modules.css' in html
+
+
+def test_inline_images_in_rendered_bodies_are_resized_on_vercel(monkeypatch, rows):
+    monkeypatch.setattr(settings, 'ON_VERCEL', True)
+    src = f'{BLOB_URL}/images/article/newest/inline.png'
+
+    html = article_with(
+        monkeypatch,
+        rows,
+        body_html=f'<figure><img src="{src}" alt="a" width="1920" height="1080"></figure>',
+    )
+
+    assert '<figure><img src="/_vercel/image?url=' in html
+    assert 'sizes="(max-width: 720px) 100vw, 680px"' in html
+
+
+def test_reading_time_comes_from_the_stored_word_count(monkeypatch, rows):
+    html = article_with(monkeypatch, rows, body_html='<p>x</p>', word_count=1000)
+
+    assert '5 min read' in html
+
+
+TOC = [{'level': 2, 'id': f'section-{n}', 'text': f'Section {n}'} for n in range(3)]
+
+
+def test_three_headings_get_a_table_of_contents(monkeypatch, rows):
+    html = article_with(monkeypatch, rows, body_html='<p>x</p>', toc=TOC)
+
+    assert '<details class="toc toc-collapsed">' in html
+    assert '<nav class="toc toc-side" aria-label="Contents">' in html
+    assert html.count('<a href="#section-1">Section 1</a>') == 2
+
+
+def test_two_headings_are_not_worth_a_table_of_contents(monkeypatch, rows):
+    html = article_with(monkeypatch, rows, body_html='<p>x</p>', toc=TOC[:2])
+
+    assert 'class="toc' not in html
+    assert 'has-toc' not in html
+
+
+def test_previous_and_next_follow_the_publishing_order(client):
+    html = client.get('/articles/middle').text
+
+    assert (
+        '<a href="/articles/oldest" class="article-pagination-link" rel="prev">' in html
+    )
+    assert (
+        '<a href="/articles/newest" class="article-pagination-link is-next" rel="next">'
+        in html
+    )
+    assert 'A project' not in html
+
+
+def test_the_newest_article_has_no_next_and_the_oldest_no_previous(client):
+    assert 'rel="next"' not in client.get('/articles/newest').text
+    assert 'rel="prev"' not in client.get('/articles/oldest').text
+
+
+def test_an_unedited_article_does_not_claim_an_update(client):
+    html = client.get('/articles/newest').text
+
+    assert 'Updated on' not in html
+    assert 'article:modified_time' not in html
+
+
+def test_an_edited_article_shows_when(monkeypatch, rows):
+    html = article_with(
+        monkeypatch, rows, updated_at=datetime(2026, 11, 2, 12, 0, tzinfo=UTC)
+    )
+
+    assert 'Updated on November 2, 2026' in html
+    assert 'article:modified_time" content="2026-11-02T12:00:00+00:00"' in html
+
+
+def test_an_edit_on_the_day_of_publishing_is_not_worth_mentioning(monkeypatch, rows):
+    created = rows[0]['created_at']
+
+    html = article_with(
+        monkeypatch, rows, updated_at=created.replace(hour=created.hour + 1)
+    )
+
+    assert 'Updated on' not in html
+
+
+def test_the_title_is_the_only_h1(client):
+    assert client.get('/articles/newest').text.count('<h1') == 1

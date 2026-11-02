@@ -1,0 +1,280 @@
+/* Rendered article bodies. Spacing lives here and never in the content. */
+
+.article-layout {
+  width: 100%;
+  padding-inline: var(--container-padding);
+}
+
+.prose {
+  max-width: 68ch;
+  margin-inline: auto;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+
+.prose > * + * {
+  margin-block-start: 1.5em;
+}
+
+.prose h2,
+.prose h3 {
+  font-family: var(--title-font-family);
+  line-height: 1.25;
+  scroll-margin-top: 3rem;
+}
+
+.prose h2 {
+  font-size: 3rem;
+  margin-block-start: 2.2em;
+}
+
+.prose h3 {
+  font-size: 2.3rem;
+  margin-block-start: 1.8em;
+}
+
+.prose > h2 + *,
+.prose > h3 + * {
+  margin-block-start: 1em;
+}
+
+.heading-anchor {
+  margin-inline-start: 0.4em;
+  color: inherit;
+  opacity: 0;
+  font-weight: 400;
+}
+
+.prose h2:hover .heading-anchor,
+.prose h3:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 0.5;
+}
+
+/* Touch screens have no hover, so the link stays faintly visible there. */
+@media (hover: none) {
+  .heading-anchor {
+    opacity: 0.3;
+  }
+}
+
+.prose p a,
+.prose li a:not(.footnote-backref),
+.callout a {
+  color: #4169e1;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+[data-theme="dark"] .prose p a,
+[data-theme="dark"] .prose li a:not(.footnote-backref),
+[data-theme="dark"] .callout a {
+  color: #8ba6f5;
+}
+
+.prose ul,
+.prose ol {
+  padding-inline-start: 2.4rem;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li + li {
+  margin-block-start: 0.5em;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border-top-color);
+}
+
+.prose img {
+  height: auto;
+  margin-inline: auto;
+  border-radius: 0.6rem;
+}
+
+.prose figcaption {
+  margin-block-start: 0.8em;
+  font-size: 1.4rem;
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.prose blockquote {
+  padding-inline-start: 1.6rem;
+  border-inline-start: 3px solid var(--border-top-color);
+}
+
+.prose .pull-quote blockquote {
+  padding: 0;
+  border: none;
+  font-family: var(--title-font-family);
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.prose .pull-quote figcaption {
+  margin-block-start: 0.6em;
+  font-family: var(--title-font-family);
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-align: start;
+  opacity: 1;
+}
+
+.callout {
+  padding: 1.2rem 1.6rem;
+  border-inline-start: 4px solid #4169e1;
+  border-radius: 0.4rem;
+  background-color: var(--border-top-color);
+}
+
+.callout-warning {
+  border-inline-start-color: #d9822b;
+}
+
+.callout > * + * {
+  margin-block-start: 1em;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.5rem;
+}
+
+.prose th,
+.prose td {
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--border-top-color);
+  text-align: start;
+}
+
+.footnotes {
+  font-size: 1.4rem;
+}
+
+.footnote-ref a {
+  color: #4169e1;
+}
+
+/* Equations. Browsers lay out MathML with whichever math font they find. */
+.prose math {
+  font-family: "Latin Modern Math", "STIX Two Math", "Cambria Math", math;
+  font-size: 1.1em;
+}
+
+.math.block {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.2em;
+}
+
+/* MathML Core dropped <menclose>, so Chromium needs the strike drawn for it. */
+.prose menclose[notation="updiagonalstrike"] {
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 0.05em),
+    currentColor calc(50% - 0.05em),
+    currentColor calc(50% + 0.05em),
+    transparent calc(50% + 0.05em)
+  );
+}
+
+/* Table of contents: collapsed above the text, or beside it when there's room. */
+.toc-list {
+  list-style: none;
+  font-size: 1.4rem;
+  line-height: 1.4;
+}
+
+.toc-list li + li {
+  margin-block-start: 0.6em;
+}
+
+.toc-list a {
+  color: var(--default-text-color);
+  opacity: 0.8;
+}
+
+.toc-list a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.toc-level-3 {
+  padding-inline-start: 1.2rem;
+}
+
+.toc-side {
+  display: none;
+}
+
+.toc-collapsed {
+  max-width: 68ch;
+  margin: 0 auto 2.5rem;
+  padding: 1rem 1.4rem;
+  border: 1px solid var(--border-top-color);
+  border-radius: 0.6rem;
+}
+
+.toc-collapsed summary {
+  cursor: pointer;
+}
+
+.toc-collapsed .toc-list {
+  margin-block-start: 1rem;
+}
+
+.toc-title {
+  margin-block-end: 1rem;
+  font-family: var(--title-font-family);
+  font-size: 1.8rem;
+}
+
+/* 680px of text with a column on each side, so the text stays centred. It's
+   wider than .blog-post-container, whose flex centring lets it overflow evenly. */
+@media (min-width: 1200px) {
+  .article-layout.has-toc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 68ch) minmax(0, 1fr);
+    column-gap: 4rem;
+    align-self: center;
+    width: min(130rem, 100vw - 3rem);
+    padding-inline: 0;
+  }
+
+  .has-toc .prose {
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .has-toc .toc-collapsed {
+    display: none;
+  }
+
+  .has-toc .toc-side {
+    display: block;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+    position: sticky;
+    top: 3rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+  }
+}

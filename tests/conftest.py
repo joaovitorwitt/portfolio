@@ -9,6 +9,7 @@ from website import create_app
 
 SITE_URL = 'https://site.test'
 BLOB_URL = 'https://store1.public.blob.vercel-storage.com'
+CREATED_AT = datetime(2024, 10, 12, 15, 30, tzinfo=UTC)
 
 
 def make_content(slug: str, kind: str = 'article', **overrides) -> dict:
@@ -20,12 +21,17 @@ def make_content(slug: str, kind: str = 'article', **overrides) -> dict:
         'slug': slug,
         'description': f'Description of {slug}',
         'content': f'<p>Body of {slug}</p>',
+        'body_html': None,
+        'has_math': False,
+        'toc': [],
+        'word_count': 0,
         'image_url': f'{BLOB_URL}/images/{kind}/{slug}/abc123.png',
         'image_width': 1000,
         'image_height': 500,
         'repo_url': None,
         'tags': ['physics'],
-        'created_at': datetime(2024, 10, 12, 15, 30, tzinfo=UTC),
+        'created_at': CREATED_AT,
+        'updated_at': overrides.get('created_at', CREATED_AT),
     } | overrides
 
 
@@ -51,6 +57,18 @@ class FakeRepository:
                 return row
 
         return None
+
+    def adjacent(self, kind: str, created_at: datetime) -> dict:
+        rows = sorted(
+            (row for row in self.rows if row['kind'] == kind),
+            key=lambda row: row['created_at'],
+        )
+        older = [row for row in rows if row['created_at'] < created_at]
+        newer = [row for row in rows if row['created_at'] > created_at]
+        return {
+            'previous': older[-1] if older else None,
+            'next': newer[0] if newer else None,
+        }
 
 
 @pytest.fixture(autouse=True)

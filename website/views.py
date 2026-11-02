@@ -67,6 +67,7 @@ def article(slug: str):
         'articles/detail.html',
         article=item,
         related=related,
+        adjacent=repository.adjacent('article', item['created_at']),
         meta={
             'title': item['title'],
             'description': item['description'],
@@ -75,6 +76,9 @@ def article(slug: str):
             'image_width': item['image_width'],
             'image_height': item['image_height'],
             'published_time': item['created_at'],
+            'modified_time': (
+                item['updated_at'] if item['updated_at'] != item['created_at'] else None
+            ),
             'tags': item['tags'],
         },
     )
