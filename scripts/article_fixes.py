@@ -13,6 +13,24 @@ LINK_FIXES = {
     ),
 }
 
+# Corrections the owner asked for. Each must match once, in the article it's for.
+TEXT_FIXES = {
+    'kinematics-in-one-dimension': (
+        (
+            'You can check the real experiment by clicking here '
+            '\\[insert link here\\]\n\n',
+            '',
+        ),
+        (r'$$ { V = 20 \, \text{m/s}} $$', r'$$ { V = 0 \, \text{m/s}} $$'),
+    ),
+    'how-the-measurement-of-units-changed-physics': (
+        (
+            r'$$ { I \cdot V = m \cdot g \cdot V } $$',
+            r'$$ { I \cdot V = m \cdot g \cdot v } $$',
+        ),
+    ),
+}
+
 CAPTIONS = {
     # kinematics-in-one-dimension
     'cb5b772bf4e5': 'A set of coordinate axes.',

@@ -164,6 +164,21 @@ def test_the_dead_link_points_at_the_newton_article():
     assert fixed == 'his [laws.](/articles/how-the-laws-of-newton-shape-our-reality)'
 
 
+def test_text_fixes_apply_only_to_their_article(monkeypatch):
+    monkeypatch.setitem(html_to_markdown.TEXT_FIXES, 'x', (('old\n\n', ''),))
+
+    assert apply_fixes('old\n\nkept\n', 'x') == 'kept\n'
+    assert apply_fixes('old\n\nkept\n', 'y') == 'old\n\nkept\n'
+
+
+@pytest.mark.parametrize('text', ['nothing here\n', 'old\n\nold\n\n'])
+def test_a_text_fix_that_does_not_match_once_stops_the_conversion(monkeypatch, text):
+    monkeypatch.setitem(html_to_markdown.TEXT_FIXES, 'x', (('old\n\n', ''),))
+
+    with pytest.raises(ValueError, match='expected one match'):
+        apply_fixes(text, 'x')
+
+
 @pytest.mark.parametrize('tex', article_fixes.FORMULAS.values())
 def test_every_written_out_formula_renders(tex):
     assert 'math-error' not in render(tex).html

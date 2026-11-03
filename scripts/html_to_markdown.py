@@ -21,7 +21,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from bs4 import BeautifulSoup  # noqa: E402
 from markdownify import MarkdownConverter  # noqa: E402
 
-from scripts.article_fixes import CAPTIONS, FORMULAS, LINK_FIXES  # noqa: E402
+from scripts.article_fixes import (  # noqa: E402
+    CAPTIONS,
+    FORMULAS,
+    LINK_FIXES,
+    TEXT_FIXES,
+)
 from website.db import ContentMarkdown, get_pool  # noqa: E402
 from website.markdown import ATTRIBUTION_MARK, MATH_ERROR_CLASS, render  # noqa: E402
 
@@ -176,8 +181,8 @@ def conversion_problems(html: str, markdown: str) -> list[str]:
     return problems
 
 
-def apply_fixes(markdown: str) -> str:
-    """Links, captions and formula pictures, from scripts/article_fixes.py."""
+def apply_fixes(markdown: str, slug: str | None = None) -> str:
+    """Links, captions, formula pictures and text, from scripts/article_fixes.py."""
 
     def fix_image(match: re.Match) -> str:
         key = _IMAGE_HASH.search(match['url']).group(1)
@@ -190,6 +195,12 @@ def apply_fixes(markdown: str) -> str:
     fixed = _MD_IMAGE.sub(fix_image, markdown)
     for old, new in LINK_FIXES.items():
         fixed = fixed.replace(f']({old})', f']({new})')
+
+    for old, new in TEXT_FIXES.get(slug, ()):
+        if fixed.count(old) != 1:
+            raise ValueError(f'{slug}: expected one match for {old!r}')
+
+        fixed = fixed.replace(old, new)
 
     return fixed
 
@@ -216,7 +227,7 @@ def plan_updates(rows: list[dict]) -> tuple[list[dict], dict[str, list[str]]]:
     problems = {}
     for row in rows:
         base = to_markdown(row['content'])
-        fixed = apply_fixes(base)
+        fixed = apply_fixes(base, row['slug'])
         result = render(fixed)
 
         found = conversion_problems(row['content'], base)
