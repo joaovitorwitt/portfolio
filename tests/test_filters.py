@@ -116,7 +116,7 @@ def test_responsive_images_rewrites_inline_tags():
 
     assert f'src="{RESIZED}&amp;w=800&amp;q=75"' in result
     assert 'srcset="' in result
-    assert 'sizes="(max-width: 540px) 100vw, 540px"' in result
+    assert 'sizes="(max-width: 720px) 100vw, 680px"' in result
     assert "alt='Axis'" in result
     assert 'loading="lazy" decoding="async">' in result
     assert result.startswith('<p>a</p><img') and result.endswith('><p>b</p>')

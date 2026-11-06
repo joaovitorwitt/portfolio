@@ -1,0 +1,41 @@
+/* Loaded with media="print": just the article, with its links spelled out. */
+
+:root,
+[data-theme="dark"] {
+  --default-background-color: #fff;
+  --default-text-color: #000;
+}
+
+header,
+.reading-progress-track,
+.back-to-top,
+.share-buttons,
+.toc,
+.heading-anchor,
+.article-pagination,
+.related-articles,
+.large-button-container {
+  display: none !important;
+}
+
+.prose {
+  max-width: none;
+  color: #000;
+}
+
+.prose a[href^="http"]::after {
+  content: " (" attr(href) ")";
+  font-size: 0.85em;
+  word-break: break-all;
+}
+
+.prose figure,
+.prose pre,
+.prose .math.block {
+  break-inside: avoid;
+}
+
+.prose h2,
+.prose h3 {
+  break-after: avoid;
+}

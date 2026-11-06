@@ -41,3 +41,50 @@
   flex-direction: column;
   gap: 2rem;
 }
+
+.blog-post-data .article-updated {
+  display: block;
+  opacity: 0.7;
+  font-size: 1.4rem;
+}
+
+.article-pagination {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.article-pagination-link {
+  display: block;
+  padding: 1.5rem;
+  border: 1px solid var(--border-top-color);
+  border-radius: 0.8rem;
+  color: var(--default-text-color);
+}
+
+.article-pagination-link:hover {
+  border-color: currentColor;
+}
+
+.article-pagination-label {
+  display: block;
+  font-size: 1.3rem;
+  opacity: 0.7;
+}
+
+.article-pagination-title {
+  display: block;
+  font-family: var(--title-font-family);
+  font-size: 1.8rem;
+}
+
+@media (min-width: 520px) {
+  .article-pagination {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .article-pagination-link.is-next {
+    grid-column: 2;
+    text-align: right;
+  }
+}

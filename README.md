@@ -14,6 +14,7 @@ website/
   __init__.py       create_app()
   views.py          page routes, rss.xml, sitemap.xml
   db.py             connection pool + ContentRepository
+  markdown.py       renders Markdown to safe HTML, when saving
   templates/        Jinja templates
 public/             static files (css, js, img, resume), served at the site root
 migrations/         SQL schema, applied by hand in order
@@ -58,6 +59,47 @@ python scripts/import_articles.py --dry-run
 python scripts/import_articles.py
 ```
 
+## Articles
+
+An article's source is the Markdown in `body_md`. Saving renders it once, through
+`website/markdown.py`, into `body_html`, `has_math`, `toc` and `word_count`, and
+pages only read those, so rendering costs nothing per request. An article with no
+`body_html` falls back to the legacy HTML in `content`.
+
+The renderer lives in `requirements-dev.txt` because only scripts call it so far.
+An admin that saves from the site will have to move it to `requirements.txt`.
+
+Besides CommonMark:
+
+| Write | Get |
+| --- | --- |
+| `![alt](url "caption"){width=1920 height=1080}` | a figure with a caption; the size stops the page jumping as it loads |
+| `$x_1$`, `$$ \frac{a}{b} $$` | MathML, which needs no script. A price like `$100` stays text |
+| `::: quote` ... `— Author` ... `:::` | a pull quote, with a last line starting with `—` as its attribution |
+| `::: note`, `::: warning` | a callout |
+| ` ```python ` | code highlighted by Pygments, coloured by `code.modules.css` |
+| tables, `~~gone~~`, `[^1]` footnotes | the usual |
+
+Links starting with `http` open in a new tab with `rel="noopener"`. Everything is
+sanitised with `nh3` against a fixed allow-list, raw HTML included, so nothing in
+the Markdown can run a script. `## ` and `### ` headings get an id and a `#` link,
+and a page with at least three of them shows a table of contents.
+
+To convert the legacy HTML, or to render everything again after changing the
+renderer:
+
+```bash
+python scripts/html_to_markdown.py --dry-run  # writes backups/markdown/, reads the database
+python scripts/html_to_markdown.py --apply    # copies the table, then stores everything
+python scripts/render_all.py --dry-run        # lists the rows that would change
+python scripts/render_all.py --apply          # copies the table, then stores them
+```
+
+`html_to_markdown.py` stops without writing if any article loses a word, an
+equation, an image, a link or bold text. Hand-written changes, such as captions
+and formula images written out as TeX, are in `scripts/article_fixes.py`. Neither
+`--apply` touches `content` or `updated_at`: rendering again isn't an edit.
+
 ## Images
 
 Originals live in a public Vercel Blob store, named
@@ -68,7 +110,7 @@ resized AVIF/WebP copies. Locally that endpoint doesn't exist, so images load
 straight from their Blob URLs and no Vercel service is needed.
 
 Cover sizes are stored in `image_width` and `image_height`; inline images carry
-theirs in the markup. A new store means updating `remotePatterns` in
+theirs in the Markdown or legacy markup. A new store means updating `remotePatterns` in
 `vercel.json`.
 
 To move images from Cloudinary (`pip` installs what these need with

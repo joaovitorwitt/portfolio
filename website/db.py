@@ -1,8 +1,10 @@
 import logging
+from datetime import datetime
 from functools import lru_cache
 
 from psycopg import sql
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
 import settings
@@ -18,12 +20,17 @@ CONTENT_COLUMNS = (
     'slug',
     'description',
     'content',
+    'body_html',
+    'has_math',
+    'toc',
+    'word_count',
     'image_url',
     'image_width',
     'image_height',
     'repo_url',
     'tags',
     'created_at',
+    'updated_at',
 )
 
 _SELECT = f'SELECT {", ".join(CONTENT_COLUMNS)} FROM content'
@@ -116,6 +123,36 @@ class ContentRepository:
 
         return row
 
+    def adjacent(self, kind: str, created_at: datetime) -> dict:
+        """The items published just before and just after the given date."""
+        query = (
+            'SELECT slug, title FROM content WHERE kind = %s AND created_at {} %s '
+            'ORDER BY created_at {} LIMIT 1'
+        )
+
+        with get_pool().connection() as conn:
+            return {
+                'previous': conn.execute(
+                    query.format('<', 'DESC'), (kind, created_at)
+                ).fetchone(),
+                'next': conn.execute(
+                    query.format('>', 'ASC'), (kind, created_at)
+                ).fetchone(),
+            }
+
+
+def _backup_table(conn, backup_table: str) -> None:
+    """
+    Copies `content`, unless a copy of that name already exists. Tables in
+    Supabase's public schema are reachable through its REST API. The scripts
+    connect as the owner, which RLS does not restrict.
+    """
+    backup = sql.Identifier(backup_table)
+    conn.execute(
+        sql.SQL('CREATE TABLE IF NOT EXISTS {} AS TABLE content').format(backup)
+    )
+    conn.execute(sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(backup))
+
 
 class ContentImages:
     """
@@ -148,7 +185,6 @@ class ContentImages:
         Copies the table, applies every update and checks that no Cloudinary URL
         is left, all in one transaction: any failure rolls the whole thing back.
         """
-        backup = sql.Identifier(backup_table)
         update = """
             UPDATE content
             SET image_url = %(image_url)s,
@@ -163,14 +199,7 @@ class ContentImages:
         """
 
         with get_pool().connection() as conn:
-            conn.execute(
-                sql.SQL('CREATE TABLE IF NOT EXISTS {} AS TABLE content').format(backup)
-            )
-            # Tables in Supabase's public schema are reachable through its REST
-            # API. The script connects as the owner, which RLS does not restrict.
-            conn.execute(
-                sql.SQL('ALTER TABLE {} ENABLE ROW LEVEL SECURITY').format(backup)
-            )
+            _backup_table(conn, backup_table)
 
             for row in updates:
                 conn.execute(update, row)
@@ -180,3 +209,47 @@ class ContentImages:
                 raise RuntimeError(
                     f'{left["remaining"]} rows still reference Cloudinary, rolled back'
                 )
+
+
+class ContentMarkdown:
+    """
+    Write access for the Markdown scripts in scripts/. Neither the legacy `content`
+    column nor updated_at changes: rendering an article again isn't an edit, and
+    the page would otherwise claim it was updated.
+    """
+
+    def legacy_articles(self) -> list[dict]:
+        """A dry run may come before migration 004, so no new columns here."""
+        query = (
+            "SELECT id, slug, content FROM content WHERE kind = 'article' ORDER BY slug"
+        )
+
+        with get_pool().connection() as conn:
+            return conn.execute(query).fetchall()
+
+    def sources(self) -> list[dict]:
+        query = (
+            'SELECT id, slug, body_md, body_html, has_math, toc, word_count '
+            'FROM content WHERE body_md IS NOT NULL ORDER BY kind, slug'
+        )
+
+        with get_pool().connection() as conn:
+            return conn.execute(query).fetchall()
+
+    def apply(self, updates: list[dict], backup_table: str) -> None:
+        """Copies the table and writes every update in one transaction."""
+        update = """
+            UPDATE content
+            SET body_md = %(body_md)s,
+                body_html = %(body_html)s,
+                has_math = %(has_math)s,
+                toc = %(toc)s,
+                word_count = %(word_count)s
+            WHERE id = %(id)s
+        """
+
+        with get_pool().connection() as conn:
+            _backup_table(conn, backup_table)
+
+            for row in updates:
+                conn.execute(update, row | {'toc': Jsonb(row['toc'])})
