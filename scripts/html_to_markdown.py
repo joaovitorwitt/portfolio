@@ -244,6 +244,7 @@ def plan_updates(rows: list[dict]) -> tuple[list[dict], dict[str, list[str]]]:
                 'has_math': result.has_math,
                 'toc': result.toc,
                 'word_count': result.word_count,
+                'body_text': result.text,
             }
         )
 

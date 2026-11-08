@@ -229,7 +229,7 @@ class ContentMarkdown:
 
     def sources(self) -> list[dict]:
         query = (
-            'SELECT id, slug, body_md, body_html, has_math, toc, word_count '
+            'SELECT id, slug, body_md, body_html, has_math, toc, word_count, body_text '
             'FROM content WHERE body_md IS NOT NULL ORDER BY kind, slug'
         )
 
@@ -244,7 +244,8 @@ class ContentMarkdown:
                 body_html = %(body_html)s,
                 has_math = %(has_math)s,
                 toc = %(toc)s,
-                word_count = %(word_count)s
+                word_count = %(word_count)s,
+                body_text = %(body_text)s
             WHERE id = %(id)s
         """
 

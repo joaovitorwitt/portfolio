@@ -254,6 +254,7 @@ def test_render_all_only_plans_rows_that_changed():
             'has_math': current.has_math,
             'toc': current.toc,
             'word_count': current.word_count,
+            'body_text': current.text,
         },
         {
             'id': 2,
@@ -263,6 +264,7 @@ def test_render_all_only_plans_rows_that_changed():
             'has_math': False,
             'toc': [],
             'word_count': 1,
+            'body_text': 'Old.',
         },
     ]
 
@@ -270,6 +272,25 @@ def test_render_all_only_plans_rows_that_changed():
 
     assert [update['slug'] for update in updates] == ['stale']
     assert updates[0]['word_count'] == 2
+    assert updates[0]['body_text'] == 'Fresh words.'
+
+
+def test_render_all_fills_a_missing_body_text():
+    current = render('Same words.')
+    row = {
+        'id': 1,
+        'slug': 'unindexed',
+        'body_md': 'Same words.',
+        'body_html': current.html,
+        'has_math': current.has_math,
+        'toc': current.toc,
+        'word_count': current.word_count,
+        'body_text': None,
+    }
+
+    updates = render_all.plan_updates([row])
+
+    assert [update['body_text'] for update in updates] == ['Same words.']
 
 
 class RecordingConnection:
@@ -300,6 +321,7 @@ def test_applying_backs_up_first_and_leaves_content_and_updated_at_alone(monkeyp
         'has_math': False,
         'toc': [{'level': 2, 'id': 'a', 'text': 'A'}],
         'word_count': 1,
+        'body_text': 'text',
     }
 
     ContentMarkdown().apply([row], 'content_backup_test')
@@ -311,3 +333,4 @@ def test_applying_backs_up_first_and_leaves_content_and_updated_at_alone(monkeyp
     assert 'updated_at' not in update[0]
     assert ' content =' not in update[0]
     assert isinstance(update[1]['toc'], Jsonb)
+    assert 'body_text = %(body_text)s' in update[0]

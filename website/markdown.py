@@ -175,6 +175,7 @@ class RenderResult(NamedTuple):
     toc: list[dict]
     has_math: bool
     word_count: int
+    text: str
 
 
 def _highlight_code(code: str, language: str, _attrs: str) -> str:
@@ -360,26 +361,39 @@ def _heading_links(state) -> None:
 
 
 def _measure(state) -> None:
-    """Words in the prose, leaving out code, math, alt text and heading links."""
+    """
+    The prose as plain text, one line per block, and its words. Both leave out
+    code, math, alt text and heading links. The text is what search indexes.
+    """
     words = 0
     has_math = False
+    blocks = []
     for token in state.tokens:
         has_math = has_math or token.type.startswith('math')
         in_anchor = False
+        pieces = []
         for child in token.children or []:
             has_math = has_math or child.type.startswith('math')
             if child.type == 'link_open' and child.attrGet('class') == 'heading-anchor':
                 in_anchor = True
             elif child.type == 'link_close':
                 in_anchor = False
+            elif child.type in ('softbreak', 'hardbreak'):
+                pieces.append(' ')
             elif child.type == 'text' and not in_anchor:
+                pieces.append(child.content)
                 words += sum(
                     any(char.isalnum() for char in word)
                     for word in child.content.split()
                 )
 
+        block = ' '.join(''.join(pieces).split())
+        if block:
+            blocks.append(block)
+
     state.env['word_count'] = words
     state.env['has_math'] = has_math
+    state.env['text'] = '\n'.join(blocks)
 
 
 def _build_parser() -> MarkdownIt:
@@ -438,4 +452,5 @@ def render(markdown: str) -> RenderResult:
         toc=env['toc'],
         has_math=env['has_math'],
         word_count=env['word_count'],
+        text=env['text'],
     )

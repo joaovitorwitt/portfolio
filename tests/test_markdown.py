@@ -194,6 +194,25 @@ def test_word_count_leaves_out_code_math_and_heading_links():
     assert render(markdown).word_count == 5
 
 
+def test_text_for_search_is_the_prose_alone_one_line_per_block():
+    markdown = (
+        '## Two words\n\n'
+        'Three **more**\nwords `not_this_code` $x + y$.\n\n'
+        '```python\nnot indexed at all\n```\n\n'
+        '$$ a + b + c $$\n\n'
+        '- a [linked](https://example.com) item\n\n'
+        '![not the alt either](/img/a.png "nor the caption")\n'
+    )
+
+    assert render(markdown).text == 'Two words\nThree more words .\na linked item'
+
+
+def test_text_holds_the_same_words_as_the_count():
+    result = render('One, two and three.\n\n::: note\nFour five.\n:::\n')
+
+    assert len(result.text.split()) == result.word_count == 6
+
+
 @pytest.mark.parametrize(
     ('markdown', 'forbidden'),
     [
