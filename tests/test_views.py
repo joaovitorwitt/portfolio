@@ -312,3 +312,139 @@ def test_an_edit_on_the_day_of_publishing_is_not_worth_mentioning(monkeypatch, r
 
 def test_the_title_is_the_only_h1(client):
     assert client.get('/articles/newest').text.count('<h1') == 1
+
+
+# Search and tag filtering on /articles
+
+
+@pytest.fixture
+def searchable(monkeypatch, rows):
+    rows[1]['body_text'] = 'Newton wrote <b>three</b> laws & more.'
+    repository = FakeRepository(rows)
+    monkeypatch.setattr(website.views, 'repository', repository)
+    return repository
+
+
+def test_article_list_has_a_search_form_that_works_without_javascript(client):
+    html = client.get('/articles').text
+
+    assert '<form class="search-form" method="get" action="/articles"' in html
+    assert '<label class="search-label" for="search-q">' in html
+    assert 'name="q" value=""' in html
+    assert '<script src="/js/search.js" defer></script>' in html
+
+
+def test_plain_list_has_chips_with_all_active_and_no_noindex(client):
+    html = client.get('/articles').text
+
+    assert '<a class="tag-chip" href="/articles" aria-current="true">All</a>' in html
+    assert (
+        '<a class="tag-chip" href="/articles?tag=computer+science">Computer Science</a>'
+    ) in html
+    assert 'noindex' not in html
+    assert f'<link rel="canonical" href="{SITE_URL}/articles">' in html
+
+
+def test_search_ranks_title_matches_first_with_a_count(searchable):
+    html = create_app().test_client().get('/articles?q=middle').text
+
+    assert searchable.searched == ('article', 'middle', None)
+    assert '1 article for “middle”' in html
+    assert '/articles/middle' in html
+    assert '/articles/newest' not in html
+
+
+@pytest.mark.usefixtures('searchable')
+def test_search_shows_an_escaped_snippet_in_place_of_the_description():
+    html = create_app().test_client().get('/articles?q=newton').text
+
+    assert (
+        '… <mark>Newton</mark> wrote &lt;b&gt;three&lt;/b&gt; laws &amp; more. …'
+    ) in html
+    assert 'Description of middle' not in html
+
+
+@pytest.mark.usefixtures('searchable')
+def test_search_pages_are_noindexed_and_canonical_to_the_list():
+    html = create_app().test_client().get('/articles?q=newton').text
+
+    assert '<meta name="robots" content="noindex">' in html
+    assert f'<link rel="canonical" href="{SITE_URL}/articles">' in html
+
+
+def test_chips_keep_the_query_and_mark_the_active_tag(searchable):
+    html = create_app().test_client().get('/articles?q=article&tag=physics').text
+
+    assert searchable.searched == ('article', 'article', 'physics')
+    assert '<a class="tag-chip" href="/articles?q=article">All</a>' in html
+    assert (
+        '<a class="tag-chip" href="/articles?q=article&amp;tag=physics" '
+        'aria-current="true">Physics</a>'
+    ) in html
+    assert '<input type="hidden" name="tag" value="physics">' in html
+    assert '2 articles for “article” in Physics' in html
+
+
+def test_tag_alone_filters_the_list(client):
+    html = client.get('/articles?tag=computer+science').text
+
+    assert '/articles/oldest' in html
+    assert '/articles/newest' not in html
+    assert '1 article in Computer Science' in html
+
+
+@pytest.mark.usefixtures('searchable')
+def test_no_results_offers_a_way_back():
+    html = create_app().test_client().get('/articles?q=quantum').text
+
+    assert '0 articles for “quantum”' in html
+    assert 'No articles match “quantum”.' in html
+    assert '<a class="search-clear" href="/articles">Clear search</a>' in html
+
+
+@pytest.mark.parametrize('q', ['', '   ', '\t'])
+def test_an_empty_query_is_the_normal_list(searchable, q):
+    response = create_app().test_client().get('/articles', query_string={'q': q})
+
+    assert not hasattr(searchable, 'searched')
+    assert '/articles/oldest' in response.text
+    assert 'noindex' not in response.text
+
+
+def test_a_long_query_is_cut_to_100_characters(searchable):
+    create_app().test_client().get('/articles', query_string={'q': 'x' * 1024})
+
+    assert searchable.searched[1] == 'x' * 100
+
+
+@pytest.mark.parametrize('q', ["o'neil", r'back\slash', '100%', '<script>'])
+def test_odd_characters_are_searched_and_escaped(searchable, q):
+    response = create_app().test_client().get('/articles', query_string={'q': q})
+
+    assert response.status_code == 200
+    assert searchable.searched[1] == q
+    assert '<script>' not in response.text.split('<body>')[1].replace(
+        '<script src=', ''
+    )
+
+
+@pytest.mark.usefixtures('searchable')
+def test_partial_returns_only_the_results():
+    response = create_app().test_client().get('/articles?q=newton&partial=1')
+
+    assert response.status_code == 200
+    assert response.text.lstrip().startswith('<nav class="tag-chips"')
+    assert '<html' not in response.text
+    assert '<form' not in response.text
+    assert response.headers['X-Robots-Tag'] == 'noindex'
+    assert '<mark>Newton</mark>' in response.text
+
+
+@pytest.mark.usefixtures('searchable')
+@pytest.mark.parametrize('path', ['/articles?q=newton', '/articles?q=newton&partial=1'])
+def test_search_pages_stay_cacheable_by_the_cdn(path):
+    response = create_app().test_client().get(path)
+
+    assert response.headers['Cache-Control'].startswith('public, max-age=')
+    assert 's-maxage=' in response.headers['Vercel-CDN-Cache-Control']
+    assert response.headers['ETag']

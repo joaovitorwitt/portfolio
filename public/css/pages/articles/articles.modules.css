@@ -69,3 +69,129 @@
   font-style: italic;
   opacity: 0.6;
 }
+
+/* Search */
+
+.search-form {
+  max-width: 64rem;
+  margin: 0 auto 2rem;
+}
+
+.search-label {
+  display: block;
+  margin-bottom: 0.8rem;
+  font-family: var(--title-font-family);
+  font-size: 2rem;
+}
+
+.search-field {
+  display: flex;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  overflow: hidden;
+}
+
+.search-field:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 1.2rem 1.4rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  /* 16px or more, so phones don't zoom in on focus. */
+  font-size: 1.6rem;
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
+.search-submit {
+  display: grid;
+  place-items: center;
+  width: 4.8rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+.search-hint {
+  margin-top: 0.8rem;
+  font-size: 1.3rem;
+  opacity: 0.7;
+}
+
+.search-hint kbd {
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  font-family: inherit;
+}
+
+.tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.6rem;
+}
+
+.tag-chip {
+  padding: 0.6rem 1.4rem;
+  border: 1px solid var(--border-top-color);
+  border-radius: 99rem;
+  font-size: 1.4rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.tag-chip:hover,
+.tag-chip:focus-visible {
+  border-color: currentColor;
+}
+
+.tag-chip[aria-current="true"] {
+  background-color: var(--default-text-color);
+  border-color: var(--default-text-color);
+  color: var(--default-background-color);
+}
+
+.search-status {
+  min-height: 2.4rem;
+  margin-bottom: 1.6rem;
+  text-align: center;
+  font-size: 1.4rem;
+  opacity: 0.8;
+}
+
+.article-snippet mark {
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+  background-color: rgba(255, 213, 79, 0.55);
+  color: inherit;
+}
+
+.search-empty {
+  display: grid;
+  justify-items: center;
+  gap: 1.2rem;
+  padding: 4rem 0;
+  text-align: center;
+}
+
+.search-clear {
+  text-decoration: underline;
+  text-underline-offset: 0.3rem;
+}

@@ -1,8 +1,16 @@
 import logging
 
-from flask import Blueprint, Response, abort, jsonify, render_template
+from flask import (
+    Blueprint,
+    Response,
+    abort,
+    jsonify,
+    make_response,
+    render_template,
+    request,
+)
 
-from website import feeds
+from website import feeds, search
 from website.db import ContentRepository
 
 log = logging.getLogger(__name__)
@@ -42,12 +50,45 @@ def about():
 
 @bp.route('/articles')
 def articles():
+    """
+    The full list, or search results when `q` is set, optionally within one tag.
+    With `partial=1` only the results come back, for search.js to swap in.
+    """
+    query = search.clean_query(request.args.get('q'))
+    tag = request.args.get('tag', '').strip() or None
+
+    if query:
+        found = [
+            row | {'snippet': search.highlight(row['snippet'])}
+            for row in repository.search_text(
+                'article', query, tag=tag, limit=LIST_LIMIT
+            )
+        ]
+    else:
+        found = repository.search(kind='article', tag=tag, limit=LIST_LIMIT)
+
+    context = {
+        'articles': found,
+        'query': query,
+        'tag': tag,
+        'tags': repository.tags('article'),
+    }
+    # Filtered pages are endless variations on /articles: the canonical link
+    # already points there, and noindex keeps them out of search engines.
+    filtered = bool(query or tag)
+
+    if request.args.get('partial') == '1':
+        response = make_response(render_template('articles/results.html', **context))
+        response.headers['X-Robots-Tag'] = 'noindex'
+        return response
+
     return render_template(
         'articles/list.html',
-        articles=repository.search(kind='article', limit=LIST_LIMIT),
+        **context,
         meta={
             'title': 'Articles',
             'description': 'Articles on mathematics, physics, and computer science by João Vitor Witt.',
+            'noindex': filtered,
         },
     )
 

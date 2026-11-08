@@ -1,0 +1,60 @@
+{#-
+  Everything below the search box. The articles page includes it, and
+  /articles?partial=1 returns it alone for search.js to swap in, so the chips
+  always link with the current query.
+
+  Expects `articles`, `query`, `tag` and `tags`.
+-#}
+{%- from 'partials/components.html' import cover %}
+<nav class="tag-chips" aria-label="Filter by tag">
+  <a class="tag-chip" href="{{ url_for('pages.articles', q=query or None) }}"{% if not tag %} aria-current="true"{% endif %}>All</a>
+  {%- for name in tags %}
+  <a class="tag-chip" href="{{ url_for('pages.articles', q=query or None, tag=name) }}"{% if name == tag %} aria-current="true"{% endif %}>{{ name | title }}</a>
+  {%- endfor %}
+</nav>
+
+<p class="search-status" role="status">
+  {%- if query or tag -%}
+  {{ articles | length }} article{{ '' if articles | length == 1 else 's' }}
+  {%- if query %} for “{{ query }}”{% endif %}
+  {%- if tag %} in {{ tag | title }}{% endif %}
+  {%- endif -%}
+</p>
+
+{%- if articles %}
+<div class="posts-wrapper">
+  {%- for article in articles %}
+  <a class="article" href="/articles/{{ article.slug }}">
+    <div class="article-wrapper">
+      <div class="posts-article-image-wrapper">
+        {%- if article.image_url %}
+        {{ cover(article, sizes='(max-width: 767px) 100vw, 33vw', class='article-image') }}
+        {%- endif %}
+      </div>
+
+      <div class="article-data-container">
+        <h3 class="article-title">{{ article.title }}</h3>
+        {%- if article.snippet %}
+        <p class="article-description article-snippet">… {{ article.snippet }} …</p>
+        {%- else %}
+        <p class="article-description">{{ article.description }}</p>
+        {%- endif %}
+
+        <div class="article-data">
+          <span class="article-data-spacer"></span>
+          <p class="tags">{{ article.tags | join(', ') }}</p>
+          <span class="title-font">{{ article.created_at | date }}</span>
+        </div>
+      </div>
+    </div>
+  </a>
+  {%- endfor %}
+</div>
+{%- elif query or tag %}
+<div class="search-empty">
+  <p>No articles match{% if query %} “{{ query }}”{% endif %}{% if tag %} in {{ tag | title }}{% endif %}.</p>
+  <a class="search-clear" href="{{ url_for('pages.articles') }}">Clear search</a>
+</div>
+{%- else %}
+<p style="text-align: center">No articles found.</p>
+{%- endif %}

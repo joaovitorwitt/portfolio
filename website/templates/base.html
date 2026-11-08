@@ -10,6 +10,7 @@
     published_time  datetime, for article pages
     modified_time   datetime, for article pages edited after publishing
     tags            list of strings, for article pages
+    noindex         true to keep the page out of search engines
 -#}
 {%- set meta = meta | default({}) -%}
 {%- set title = meta.title ~ ' | ' ~ site.title if meta.title else site.title -%}
@@ -40,6 +41,11 @@
   <meta name="description" content="{{ description }}">
   <meta name="creator" content="{{ site.creator }}">
   <meta name="keywords" content="{{ site.keywords | join(',') }}">
+  {%- if meta.noindex %}
+  <meta name="robots" content="noindex">
+  {%- endif %}
+  {#- page_url leaves out the query string, so /articles?q=… points at /articles. #}
+  <link rel="canonical" href="{{ page_url }}">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="alternate" type="application/rss+xml" title="{{ site.title }}" href="{{ site.url }}/rss.xml">
 
