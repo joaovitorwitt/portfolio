@@ -9,7 +9,7 @@ from psycopg.errors import UniqueViolation
 import settings
 import website.admin
 import website.views
-from website import auth, create_app
+from website import auth, cache, create_app
 from website.db import ARTICLE_WRITE_COLUMNS
 from website.markdown import render
 
@@ -146,6 +146,24 @@ def articles(monkeypatch):
 def uploader(monkeypatch):
     fake = FakeUploader()
     monkeypatch.setattr(website.admin, 'uploader', fake)
+    return fake
+
+
+class FakePurge:
+    def __init__(self):
+        self.calls = 0
+        self.error = None
+
+    def __call__(self):
+        self.calls += 1
+        if self.error:
+            raise self.error
+
+
+@pytest.fixture(autouse=True)
+def purge(monkeypatch):
+    fake = FakePurge()
+    monkeypatch.setattr(website.admin, 'purge', fake)
     return fake
 
 
@@ -450,9 +468,7 @@ def test_publish_from_markdown_and_images(admin, articles, uploader):
 
     article_id = max(articles.by_id)
     assert response.headers['Location'] == f'/admin/articles/{article_id}'
-    assert ('success', 'Saved. The site shows the change within 5 minutes.') in flashes(
-        admin
-    )
+    assert ('success', 'Saved. It is live on the site now.') in flashes(admin)
 
 
 def test_saving_stores_the_whole_render(admin, articles):
@@ -701,3 +717,54 @@ def test_editing_an_article_without_markdown_needs_a_file(admin, articles):
 
     assert response.status_code == 400
     assert '.md file' in response.text
+
+
+# Clearing the CDN cache
+
+
+def test_saving_clears_the_site_cache(admin, purge):
+    admin.post('/admin/articles/new', data=article_form())
+
+    assert purge.calls == 1
+
+
+def test_deleting_clears_the_site_cache(admin, purge):
+    admin.post('/admin/articles/7/delete', data=form())
+
+    assert purge.calls == 1
+    assert ('success', 'Deleted "Old title". It is live on the site now.') in flashes(
+        admin
+    )
+
+
+def test_a_failed_purge_keeps_the_save_and_says_so(admin, articles, purge):
+    purge.error = cache.PurgeError('Vercel answered 403 for production')
+
+    response = admin.post('/admin/articles/new', data=article_form())
+
+    assert response.status_code == 302
+    assert articles.saved
+    [(category, message)] = flashes(admin)
+    assert category == 'warning'
+    assert 'Saved.' in message
+    assert 'Vercel answered 403' in message
+    assert 'within 5 minutes' in message
+
+
+def test_rejected_forms_do_not_clear_the_cache(admin, purge):
+    admin.post('/admin/articles/new', data=form(title='No file'))
+
+    assert purge.calls == 0
+
+
+def test_the_cache_can_be_cleared_by_hand(admin, purge):
+    response = admin.post('/admin/cache/clear', data=form())
+
+    assert response.headers['Location'] == '/admin'
+    assert purge.calls == 1
+
+
+def test_clearing_by_hand_needs_sign_in_and_csrf(anonymous, admin, purge):
+    assert anonymous.post('/admin/cache/clear', data=form()).status_code == 302
+    assert admin.post('/admin/cache/clear', data={}).status_code == 400
+    assert purge.calls == 0

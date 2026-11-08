@@ -27,4 +27,10 @@
   {% else %}
     <p class="muted">No articles yet.</p>
   {% endif %}
+
+  <form method="post" action="{{ url_for('admin.clear_cache') }}" class="cache-form">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+    <button type="submit" class="link-button">Clear the site cache</button>
+    <span class="hint">Saving and deleting already do this. Use it after a change made outside the admin.</span>
+  </form>
 {% endblock %}

@@ -20,7 +20,7 @@ from flask import (
 from psycopg.errors import UniqueViolation
 
 import settings
-from website import auth, publish
+from website import auth, cache, publish
 from website.db import AdminUsers, ArticleAdmin
 
 log = logging.getLogger(__name__)
@@ -30,6 +30,27 @@ bp = Blueprint('admin', __name__)
 users = AdminUsers()
 articles = ArticleAdmin()
 uploader = publish.upload_to_blob
+purge = cache.purge_pages
+
+
+def clear_site_cache(done: str) -> None:
+    """
+    Clears the CDN after a change and says how it went. A failure never undoes
+    the change: the page then catches up within the usual cache time.
+    """
+    minutes = settings.CACHE_MAX_AGE // 60
+    try:
+        purge()
+    except cache.PurgeError as error:
+        log.warning('cache purge failed: %s', error)
+        flash(
+            f'{done} The site cache could not be cleared ({error}), so the '
+            f'change shows within {minutes} minutes.',
+            'warning',
+        )
+        return
+
+    flash(f'{done} It is live on the site now.', 'success')
 
 
 @bp.before_request
@@ -94,6 +115,14 @@ def index():
     return render_template('admin/articles.html', articles=articles.rows())
 
 
+@bp.route('/cache/clear', methods=['POST'])
+@auth.login_required
+def clear_cache():
+    """For changes made outside the admin, such as SQL or a script."""
+    clear_site_cache('Cleared the site cache.')
+    return redirect(url_for('admin.index'))
+
+
 @bp.route('/articles/new', methods=['GET', 'POST'])
 @auth.login_required
 def new_article():
@@ -125,7 +154,7 @@ def delete_article(article_id: int):
 
     if request.method == 'POST':
         articles.delete(article_id)
-        flash(f'Deleted "{existing["title"]}".', 'success')
+        clear_site_cache(f'Deleted "{existing["title"]}".')
         return redirect(url_for('admin.index'))
 
     return render_template('admin/delete.html', article=existing)
@@ -276,7 +305,7 @@ def save_article(existing: dict | None):
 
     for warning in save_warnings(fields, description, row['body_html'], missing):
         flash(warning, 'warning')
-    flash('Saved. The site shows the change within 5 minutes.', 'success')
+    clear_site_cache('Saved.')
     return redirect(url_for('admin.edit_article', article_id=article_id))
 
 
