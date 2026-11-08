@@ -1,0 +1,79 @@
+{% extends 'admin/base.html' %}
+{% set editing = article is not none %}
+{% block title %}{{ 'Edit' if editing else 'New article' }}{% endblock %}
+{% block content %}
+  <div class="heading-row">
+    <h1>{{ 'Edit "' ~ article.title ~ '"' if editing else 'New article' }}</h1>
+    {% if editing %}
+      <a href="{{ url_for('pages.article', slug=article.slug) }}" target="_blank" rel="noopener">View on the site</a>
+    {% endif %}
+  </div>
+
+  {% if errors %}
+    <div class="notice notice-error" role="alert">
+      <p>Nothing was saved:</p>
+      <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      <p>Choose the files again before saving.</p>
+    </div>
+  {% endif %}
+
+  {% if missing %}
+    <p class="notice notice-warning">
+      Still without an image: {{ missing | join(', ') }}. Choose
+      {{ 'it' if missing | length == 1 else 'them' }} under Images and save.
+    </p>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="stack" id="article-form">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+
+    <fieldset class="stack">
+      <legend>Files</legend>
+
+      <label for="markdown">Markdown file{% if editing %} <span class="muted">(only to replace the text)</span>{% endif %}</label>
+      <input id="markdown" name="markdown" type="file" accept=".md,.markdown,text/markdown,text/plain" {{ 'required' if not editing }}>
+      <p class="hint">The title, description, tags and date fill in from its front matter.</p>
+
+      <label for="images">Images used in the text</label>
+      <input id="images" name="images" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+      <p class="hint" id="image-status">Choose the files from the article's imagens/ folder. They're matched by name.</p>
+
+      <label for="cover">Cover image{% if editing and article.image_url %} <span class="muted">(only to replace it)</span>{% endif %}</label>
+      <input id="cover" name="cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+      {% if editing and article.image_url %}
+        <img class="cover-preview" src="{{ article.image_url }}" alt="Current cover" width="{{ article.image_width or '' }}" height="{{ article.image_height or '' }}">
+      {% endif %}
+
+      <p class="hint">Everything together must stay under 4.5 MB. Add more images later through Edit.</p>
+    </fieldset>
+
+    <fieldset class="stack">
+      <legend>Details</legend>
+
+      <label for="title">Title</label>
+      <input id="title" name="title" value="{{ values.title }}">
+
+      <label for="slug">Slug <span class="muted">(the address: /articles/<em>slug</em>)</span></label>
+      <input id="slug" name="slug" value="{{ values.slug }}" pattern="[a-z0-9]+(-[a-z0-9]+)*" autocapitalize="none" placeholder="made from the title">
+
+      <label for="description">Description <span class="muted" id="description-count"></span></label>
+      <textarea id="description" name="description" rows="3" data-limit="{{ description_limit }}">{{ values.description }}</textarea>
+
+      <label for="tags">Tags <span class="muted">(separated by commas)</span></label>
+      <input id="tags" name="tags" value="{{ values.tags }}" autocapitalize="none">
+
+      <label for="date">Date</label>
+      <input id="date" name="date" type="date" value="{{ values.date }}">
+    </fieldset>
+
+    <button type="submit">{{ 'Save changes' if editing else 'Publish' }}</button>
+  </form>
+
+  {% if editing %}
+    <p><a class="danger" href="{{ url_for('admin.delete_article', article_id=article.id) }}">Delete this article</a></p>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="/js/admin.js" defer></script>
+{% endblock %}
