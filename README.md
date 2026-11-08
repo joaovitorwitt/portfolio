@@ -62,7 +62,8 @@ python scripts/import_articles.py
 ## Articles
 
 An article's source is the Markdown in `body_md`. Saving renders it once, through
-`website/markdown.py`, into `body_html`, `has_math`, `toc` and `word_count`, and
+`website/markdown.py`, into `body_html`, `has_math`, `toc`, `word_count` and
+`body_text`, and
 pages only read those, so rendering costs nothing per request. An article with no
 `body_html` falls back to the legacy HTML in `content`.
 
@@ -99,6 +100,29 @@ python scripts/render_all.py --apply          # copies the table, then stores th
 equation, an image, a link or bold text. Hand-written changes, such as captions
 and formula images written out as TeX, are in `scripts/article_fixes.py`. Neither
 `--apply` touches `content` or `updated_at`: rendering again isn't an edit.
+
+## Search
+
+`/articles?q=…` searches with Postgres full-text search, and `&tag=…` narrows the
+list to one tag, with or without a query. Migration `005` adds:
+
+- `body_text`, the plain prose that the renderer produces, without code or math.
+- `search`, a generated `tsvector` that weights the title highest, then the
+  description and tags, then `body_text`. It has a GIN index.
+- `pg_trgm` and a trigram index on `title`. When nothing matches, titles close
+  to the query are shown instead, so "kinmatics" still finds kinematics.
+
+The query reads quoted phrases, `-word` and `or`, and the last word also matches
+as a prefix, so "kinem" finds "kinematics". The SQL is in `website/db.py` and the
+query handling in `website/search.py`.
+
+The page is a plain GET form, so search works without JavaScript.
+`public/js/search.js` fetches `?partial=1`, which returns only the results, and
+swaps them in as you type. Filtered pages are `noindex`, and their canonical
+link points at `/articles`. Each query string is its own CDN cache entry.
+
+After changing the renderer, `scripts/render_all.py --apply` also refreshes
+`body_text`, and with it the search index.
 
 ## Images
 
