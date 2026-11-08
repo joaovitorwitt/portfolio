@@ -397,7 +397,6 @@ def test_tag_alone_filters_the_list(client):
 def test_no_results_offers_a_way_back():
     html = create_app().test_client().get('/articles?q=quantum').text
 
-    assert '0 articles for “quantum”' in html
     assert 'No articles match “quantum”.' in html
     assert '<a class="search-clear" href="/articles">Clear search</a>' in html
 

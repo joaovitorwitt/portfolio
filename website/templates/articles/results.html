@@ -13,11 +13,17 @@
   {%- endfor %}
 </nav>
 
+{#- role="status" makes screen readers announce the new count after search.js
+    swaps the results in. #}
+{%- set scope -%}
+  {%- if query %} “{{ query }}”{% endif %}{% if tag %} in {{ tag | title }}{% endif -%}
+{%- endset %}
 <p class="search-status" role="status">
-  {%- if query or tag -%}
+  {%- if (query or tag) and articles -%}
   {{ articles | length }} article{{ '' if articles | length == 1 else 's' }}
-  {%- if query %} for “{{ query }}”{% endif %}
-  {%- if tag %} in {{ tag | title }}{% endif %}
+  {%- if query %} for{% endif %}{{ scope }}
+  {%- elif query or tag -%}
+  No articles match{{ scope }}.
   {%- endif -%}
 </p>
 
@@ -52,7 +58,6 @@
 </div>
 {%- elif query or tag %}
 <div class="search-empty">
-  <p>No articles match{% if query %} “{{ query }}”{% endif %}{% if tag %} in {{ tag | title }}{% endif %}.</p>
   <a class="search-clear" href="{{ url_for('pages.articles') }}">Clear search</a>
 </div>
 {%- else %}
