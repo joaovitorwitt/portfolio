@@ -99,12 +99,27 @@ def test_feeds_list_the_content(client):
     assert f'{SITE_URL}/projects/a-project' in client.get('/sitemap.xml').text
 
 
-def test_pages_are_cacheable_by_browsers_and_the_cdn(client):
+def test_pages_are_cached_by_the_cdn_and_checked_by_browsers(client):
     response = client.get('/articles')
 
-    assert response.headers['Cache-Control'].startswith('public, max-age=')
-    assert 's-maxage=' not in response.headers['Cache-Control']
+    assert response.headers['Cache-Control'] == 'public, max-age=0, must-revalidate'
     assert 's-maxage=' in response.headers['Vercel-CDN-Cache-Control']
+    assert response.headers['Vercel-Cache-Tag'] == 'pages'
+
+
+@pytest.mark.parametrize(
+    'path',
+    [
+        '/',
+        '/articles',
+        '/articles?q=newest',
+        '/articles/newest',
+        '/rss.xml',
+        '/sitemap.xml',
+    ],
+)
+def test_every_cached_page_carries_the_tag_the_admin_clears(client, path):
+    assert client.get(path).headers['Vercel-Cache-Tag'] == 'pages'
 
 
 def test_repeat_request_with_the_etag_gets_a_304(client):
@@ -123,6 +138,7 @@ def test_errors_and_health_are_never_stored(client, path):
     assert 'no-store' in response.headers['Cache-Control']
     assert 'public' not in response.headers['Cache-Control']
     assert 'Vercel-CDN-Cache-Control' not in response.headers
+    assert 'Vercel-Cache-Tag' not in response.headers
 
 
 def test_public_files_do_not_get_page_cache_headers(client):
@@ -444,6 +460,6 @@ def test_partial_returns_only_the_results():
 def test_search_pages_stay_cacheable_by_the_cdn(path):
     response = create_app().test_client().get(path)
 
-    assert response.headers['Cache-Control'].startswith('public, max-age=')
+    assert response.headers['Cache-Control'] == 'public, max-age=0, must-revalidate'
     assert 's-maxage=' in response.headers['Vercel-CDN-Cache-Control']
     assert response.headers['ETag']

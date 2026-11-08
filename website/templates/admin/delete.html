@@ -1,0 +1,15 @@
+{% extends 'admin/base.html' %}
+{% block title %}Delete{% endblock %}
+{% block content %}
+  <h1>Delete "{{ article.title }}"?</h1>
+  <p>
+    It disappears from the site within 5 minutes. This can't be undone here: to
+    bring it back, upload its file from the articles repository again.
+  </p>
+
+  <form method="post" class="button-row">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+    <button type="submit" class="danger-button">Delete</button>
+    <a href="{{ url_for('admin.edit_article', article_id=article.id) }}">Cancel</a>
+  </form>
+{% endblock %}

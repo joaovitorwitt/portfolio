@@ -117,6 +117,17 @@ def no_real_database(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_real_cache_purge(monkeypatch):
+    """
+    The local .env may hold a real Vercel token. Without one, website.cache
+    refuses before opening any connection, so no test can clear the live cache.
+    """
+    monkeypatch.setattr(settings, 'VERCEL_API_TOKEN', None)
+    monkeypatch.setattr(settings, 'VERCEL_PROJECT_ID', None)
+    monkeypatch.setattr(settings, 'VERCEL_TEAM_ID', None)
+
+
+@pytest.fixture(autouse=True)
 def fixed_site_url(monkeypatch):
     monkeypatch.setattr(settings, 'SITE_URL', SITE_URL)
 

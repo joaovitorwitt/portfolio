@@ -1,0 +1,39 @@
+{#- The admin's own shell, apart from the public base.html: no hero, no analytics,
+    no theme script. Every page here is noindex and never cached. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}Admin{% endblock %} | {{ site.title }}</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <header class="admin-header">
+    <a class="admin-brand" href="{{ url_for('admin.index') }}">Admin</a>
+    {% if admin_name %}
+      <nav class="admin-nav">
+        <a href="/" target="_blank" rel="noopener">Site</a>
+        <form method="post" action="{{ url_for('admin.logout') }}">
+          <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+          <button type="submit" class="link-button">Sign out</button>
+        </form>
+      </nav>
+    {% endif %}
+  </header>
+
+  <main class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <p class="notice notice-{{ category }}" role="status">{{ message }}</p>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

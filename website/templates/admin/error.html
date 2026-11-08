@@ -1,0 +1,7 @@
+{% extends 'admin/base.html' %}
+{% block title %}Error{% endblock %}
+{% block content %}
+  <h1>Something went wrong</h1>
+  <p class="notice notice-error" role="alert">{{ message }}</p>
+  <p><a href="{{ url_for('admin.index') }}">Back to the articles</a></p>
+{% endblock %}

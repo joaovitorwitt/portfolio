@@ -1,0 +1,36 @@
+{% extends 'admin/base.html' %}
+{% block title %}Articles{% endblock %}
+{% block content %}
+  <div class="heading-row">
+    <h1>Articles</h1>
+    <a class="button" href="{{ url_for('admin.new_article') }}">New article</a>
+  </div>
+
+  {% if articles %}
+    <ul class="article-list">
+      {% for article in articles %}
+        <li>
+          <a class="article-title" href="{{ url_for('admin.edit_article', article_id=article.id) }}">{{ article.title }}</a>
+          <span class="muted">
+            {{ article.created_at | date }}
+            {%- if article.updated_at != article.created_at %} · edited {{ article.updated_at | date }}{% endif %}
+            {%- if article.tags %} · {{ article.tags | join(', ') }}{% endif %}
+          </span>
+          <span class="actions">
+            <a href="{{ url_for('pages.article', slug=article.slug) }}" target="_blank" rel="noopener">View</a>
+            <a href="{{ url_for('admin.edit_article', article_id=article.id) }}">Edit</a>
+            <a href="{{ url_for('admin.delete_article', article_id=article.id) }}">Delete</a>
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No articles yet.</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('admin.clear_cache') }}" class="cache-form">
+    <input type="hidden" name="{{ csrf_field }}" value="{{ csrf_token() }}">
+    <button type="submit" class="link-button">Clear the site cache</button>
+    <span class="hint">Saving and deleting already do this. Use it after a change made outside the admin.</span>
+  </form>
+{% endblock %}

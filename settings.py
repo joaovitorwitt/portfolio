@@ -77,3 +77,27 @@ CACHE_MAX_AGE = int(os.environ.get('CACHE_MAX_AGE', 300))
 CACHE_STALE_WHILE_REVALIDATE = int(
     os.environ.get('CACHE_STALE_WHILE_REVALIDATE', 86400)
 )
+
+# Lets the admin clear Vercel's CDN cache after each save (website/cache.py).
+# A token scoped to this project, from vercel.com/account/tokens, and the
+# project ID from Settings -> General. VERCEL_TEAM_ID is only needed with a
+# token that isn't scoped to a team or project. Without them, saving still works
+# and changes show up within CACHE_MAX_AGE.
+VERCEL_API_TOKEN = os.environ.get('VERCEL_API_TOKEN')
+VERCEL_PROJECT_ID = os.environ.get('VERCEL_PROJECT_ID')
+VERCEL_TEAM_ID = os.environ.get('VERCEL_TEAM_ID')
+
+# Signs the session cookie of the admin area. Required on Vercel: without it
+# create_app() refuses to start. 32+ random bytes, never committed.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+# How long an admin stays signed in.
+ADMIN_SESSION_HOURS = 8
+
+# Wrong passwords in a row before the account locks, and for how long.
+ADMIN_MAX_ATTEMPTS = 5
+ADMIN_LOCK_MINUTES = 15
+
+# Vercel refuses request bodies above 4.5 MB before they reach the function.
+# The same cap locally means an upload that works here works there too.
+MAX_UPLOAD_BYTES = 4_500_000

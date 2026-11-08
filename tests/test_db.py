@@ -4,7 +4,14 @@ import pytest
 
 import settings
 import website.db
-from website.db import CONTENT_COLUMNS, ContentRepository, build_conninfo
+from website.db import (
+    ARTICLE_WRITE_COLUMNS,
+    CONTENT_COLUMNS,
+    AdminUsers,
+    ArticleAdmin,
+    ContentRepository,
+    build_conninfo,
+)
 
 
 class FakeResult:
@@ -238,3 +245,115 @@ def test_tags_are_distinct_and_sorted_in_sql(connection):
     assert 'SELECT DISTINCT unnest(tags) AS tag' in query
     assert query.endswith('ORDER BY tag')
     assert params == ('article',)
+
+
+# Admin
+
+
+def test_admin_user_lookup_compares_lock_times_in_the_database(connection):
+    AdminUsers().get('joao')
+
+    query, params = connection.calls[0]
+    assert 'locked_until > now()' in query
+    assert params == ('joao',)
+
+
+def test_a_failed_login_is_counted_in_one_statement(connection):
+    AdminUsers().record_failure(3, max_attempts=5, lock_minutes=15)
+
+    [(query, params)] = connection.calls
+    assert query.lstrip().startswith('UPDATE admin_users')
+    assert 'make_interval(mins => %(minutes)s)' in query
+    assert params == {'id': 3, 'max': 5, 'minutes': 15}
+
+
+def test_saving_an_admin_resets_the_lock(connection):
+    AdminUsers().save('joao', 'scrypt:hash')
+
+    query, params = connection.calls[0]
+    assert 'ON CONFLICT (username) DO UPDATE' in query
+    assert 'locked_until = NULL' in query
+    assert params == {'username': 'joao', 'hash': 'scrypt:hash'}
+
+
+def article_fields(**overrides) -> dict:
+    return {
+        'title': 'T',
+        'slug': 's',
+        'description': '',
+        'tags': ['physics'],
+        'image_url': None,
+        'image_width': None,
+        'image_height': None,
+        'body_md': '# T',
+        'body_html': '<h1>T</h1>',
+        'has_math': False,
+        'toc': [{'id': 'a', 'text': 'A', 'level': 2}],
+        'word_count': 1,
+        'body_text': 'T',
+        'created_at': datetime(2026, 11, 2, 12, tzinfo=UTC),
+    } | overrides
+
+
+def test_create_writes_the_render_but_never_search_or_content(connection):
+    connection.rows = [{'id': 21}]
+
+    assert ArticleAdmin().create(article_fields()) == 21
+
+    query, params = connection.calls[0]
+    columns = query[query.index('(') + 1 : query.index(')')]
+    assert [c.strip() for c in columns.split(',')] == [
+        'kind',
+        *ARTICLE_WRITE_COLUMNS,
+        'updated_at',
+    ]
+    assert 'search' not in columns
+    assert "VALUES ('article'" in query
+    assert params['toc'].obj == [{'id': 'a', 'text': 'A', 'level': 2}]
+
+
+def test_update_sets_updated_at_and_stays_on_articles(connection):
+    ArticleAdmin().update(4, article_fields())
+
+    query, params = connection.calls[0]
+    assert 'body_text = %(body_text)s' in query
+    assert 'updated_at = now()' in query
+    assert "WHERE kind = 'article' AND id = %(id)s" in query
+    assert ' search ' not in query
+    assert params['id'] == 4
+
+
+@pytest.mark.parametrize('extra', [{'search': 'x'}, {'content': 'x'}])
+def test_unexpected_article_fields_are_refused(connection, extra):
+    with pytest.raises(ValueError):
+        ArticleAdmin().create(article_fields(**extra))
+
+    assert connection.calls == []
+
+
+def test_slug_check_skips_the_article_being_edited(connection):
+    ArticleAdmin().slug_taken('s', exclude_id=4)
+
+    query, params = connection.calls[0]
+    assert 'id IS DISTINCT FROM %s' in query
+    assert params == ('s', 4)
+
+
+def test_admin_values_never_reach_the_statement_text(connection):
+    hostile = "x'; DROP TABLE content; --"
+
+    AdminUsers().get(hostile)
+    AdminUsers().save(hostile, hostile)
+    ArticleAdmin().slug_taken(hostile)
+    ArticleAdmin().update(1, article_fields(title=hostile, slug=hostile))
+
+    for query, _ in connection.calls:
+        assert 'DROP TABLE' not in query
+
+
+def test_delete_only_touches_articles(connection):
+    ArticleAdmin().delete(9)
+
+    query, params = connection.calls[0]
+    assert query == "DELETE FROM content WHERE kind = 'article' AND id = %s"
+    assert params == (9,)

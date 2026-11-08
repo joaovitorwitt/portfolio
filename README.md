@@ -13,7 +13,10 @@ settings.py         configuration, read from the environment / .env
 website/
   __init__.py       create_app()
   views.py          page routes, rss.xml, sitemap.xml
-  db.py             connection pool + ContentRepository
+  admin.py          the admin area under /admin
+  auth.py           admin login: password hashes, lockout, session, CSRF
+  publish.py        turns an uploaded artigo.md and its images into a row
+  db.py             connection pool, ContentRepository and the admin's writes
   markdown.py       renders Markdown to safe HTML, when saving
   templates/        Jinja templates
 public/             static files (css, js, img, resume), served at the site root
@@ -67,8 +70,7 @@ An article's source is the Markdown in `body_md`. Saving renders it once, throug
 pages only read those, so rendering costs nothing per request. An article with no
 `body_html` falls back to the legacy HTML in `content`.
 
-The renderer lives in `requirements-dev.txt` because only scripts call it so far.
-An admin that saves from the site will have to move it to `requirements.txt`.
+The renderer is in `requirements.txt`, because the admin renders on save.
 
 Besides CommonMark:
 
@@ -100,6 +102,44 @@ python scripts/render_all.py --apply          # copies the table, then stores th
 equation, an image, a link or bold text. Hand-written changes, such as captions
 and formula images written out as TeX, are in `scripts/article_fixes.py`. Neither
 `--apply` touches `content` or `updated_at`: rendering again isn't an edit.
+
+## Admin
+
+`/admin` is where articles are published, edited and deleted, without SQL.
+Articles are written and reviewed in
+[joaovitorwitt/articles](https://github.com/joaovitorwitt/articles); once one is
+ready, upload its `artigo.md` together with the files from its `imagens/` folder.
+
+- **Fields:** title, description, tags and date fill in from the front matter
+  (`titulo`, `descricao`, `tags`, `data`). Anything typed in the form wins. The
+  slug comes from the title. Tags are saved in lowercase.
+- **Images:** each relative reference, such as `![x](imagens/x.png)`, is matched
+  to a chosen file by name, uploaded to Blob and pointed at it with its size. A
+  path with spaces must be written as `<imagens/a b.png>` or with `%20`. Images
+  already uploaded are found again on a later edit, so re-uploading a corrected
+  `artigo.md` doesn't need them a second time.
+- **Saving** stores the whole render, as `render_all.py` does, and never writes
+  the generated `search` column. It then clears Vercel's CDN cache, so the
+  change is live on the next visit. If that fails, the save stands and the page
+  catches up within the 5-minute cache. A "Clear the site cache" button does the
+  same by hand, for changes made outside the admin.
+- **Warnings, not errors:** images still missing, a `status` other than
+  `pronto`, a description over 160 characters, an equation that didn't convert.
+- **Limit:** Vercel refuses requests over 4.5 MB. Save with fewer images and add
+  the rest through Edit.
+
+Signing in uses the `admin_users` table (migration `006`): a username and a
+scrypt password hash. Five wrong passwords lock the account for 15 minutes,
+counted in the table so every function instance agrees. The session is Flask's
+signed cookie (`SECRET_KEY`), lasts 8 hours, and every form carries a CSRF
+token. Every response under `/admin` is `private, no-store` and `noindex`, and
+never gets the CDN header.
+
+To create the account, or set a new password and unlock it:
+
+```bash
+python scripts/create_admin.py   # asks for the username and password
+```
 
 ## Search
 
@@ -134,7 +174,8 @@ resized AVIF/WebP copies. Locally that endpoint doesn't exist, so images load
 straight from their Blob URLs and no Vercel service is needed.
 
 Cover sizes are stored in `image_width` and `image_height`; inline images carry
-theirs in the Markdown or legacy markup. A new store means updating `remotePatterns` in
+theirs in the Markdown or legacy markup. Images uploaded through the admin keep
+their file name: `images/article/<slug>/<name>-<sha256-12>.<ext>`. A new store means updating `remotePatterns` in
 `vercel.json`.
 
 To move images from Cloudinary (`pip` installs what these need with
@@ -164,8 +205,16 @@ Project environment variables:
 | `DATABASE_URL` | Supabase transaction pooler URI (port 6543) |
 | `USE_TRANSACTION_POOLER` | `1` |
 | `SITE_URL` | optional; defaults to the project's production domain |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token, set by connecting the store to the project; also in the local `.env` for the scripts |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob store token, set by connecting the store to the project; the admin uploads with it, and the scripts read it from the local `.env` |
+| `SECRET_KEY` | 32+ random bytes that sign the admin session, for Production and Preview. Without it the app won't start on Vercel |
+| `VERCEL_API_TOKEN` | token scoped to this project (vercel.com/account/tokens), so the admin can clear the CDN cache after a save. Also in the local `.env` |
+| `VERCEL_PROJECT_ID` | Settings -> General -> Project ID. Also in the local `.env` |
+| `VERCEL_TEAM_ID` | only for a token not scoped to a team or project |
 
-Pages are cached for 5 minutes by browsers (`Cache-Control`) and by Vercel's
-CDN (`Vercel-CDN-Cache-Control`, which never reaches the browser), so a new
-article shows up within about five minutes of being inserted.
+Pages are cached for 5 minutes by Vercel's CDN (`Vercel-CDN-Cache-Control`,
+which never reaches the browser). Browsers get `max-age=0, must-revalidate`, so
+they check every visit and usually get a 304. Every page carries
+`Vercel-Cache-Tag: pages`, and the admin deletes that tag after each save
+(`website/cache.py`), in production and preview, so changes are live at once. A
+change made with SQL shows up within five minutes, or right away with the
+admin's "Clear the site cache" button.
