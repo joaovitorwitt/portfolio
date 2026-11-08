@@ -6,6 +6,7 @@ from pathlib import Path
 from flask import Flask, request
 
 import settings
+from website import cache
 
 # Vercel serves public/ from its CDN at the site root, before a request ever
 # reaches the function, and advises against Flask's static folder. Locally the
@@ -72,11 +73,12 @@ def create_app() -> Flask:
     @app.after_request
     def add_cache_headers(response):
         """
-        Content changes rarely, so successful page loads are cacheable. Inside
-        max-age the browser skips the request entirely, a CDN in front can
-        serve other visitors without running the function, and the ETag turns
-        a repeat request into a 304 with no body. stale-while-revalidate lets
-        a cache keep serving the old copy while it refreshes in the background.
+        Content changes rarely, so successful page loads are cacheable by
+        Vercel's CDN, which serves other visitors without running the function.
+        The admin clears it after every save through the cache tag (see
+        website/cache.py). Browsers keep a copy too but check it on every
+        visit, so they never show a page older than the CDN's; the ETag turns
+        that check into a 304 with no body.
 
         Everything else (errors, 404s, the health check) is never stored.
         Files from public/ are left alone: on Vercel the CDN serves them, and
@@ -106,10 +108,7 @@ def create_app() -> Flask:
 
         # One header rather than appended directives; some CDNs only honour
         # the first Cache-Control line.
-        response.headers['Cache-Control'] = (
-            f'public, max-age={settings.CACHE_MAX_AGE}, '
-            f'stale-while-revalidate={settings.CACHE_STALE_WHILE_REVALIDATE}'
-        )
+        response.headers['Cache-Control'] = 'public, max-age=0, must-revalidate'
         # Vercel's CDN only caches function responses that carry s-maxage.
         # This header is read by Vercel alone and never reaches the browser,
         # so the Cache-Control above is exactly what visitors see.
@@ -117,6 +116,8 @@ def create_app() -> Flask:
             f'public, s-maxage={settings.CACHE_MAX_AGE}, '
             f'stale-while-revalidate={settings.CACHE_STALE_WHILE_REVALIDATE}'
         )
+        # What the admin clears after a save. Vercel reads it and drops it.
+        response.headers['Vercel-Cache-Tag'] = cache.PAGES_TAG
         response.add_etag()
         return response.make_conditional(request)
 
