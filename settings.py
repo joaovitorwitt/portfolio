@@ -77,3 +77,18 @@ CACHE_MAX_AGE = int(os.environ.get('CACHE_MAX_AGE', 300))
 CACHE_STALE_WHILE_REVALIDATE = int(
     os.environ.get('CACHE_STALE_WHILE_REVALIDATE', 86400)
 )
+
+# Signs the session cookie of the admin area. Required on Vercel: without it
+# create_app() refuses to start. 32+ random bytes, never committed.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+
+# How long an admin stays signed in.
+ADMIN_SESSION_HOURS = 8
+
+# Wrong passwords in a row before the account locks, and for how long.
+ADMIN_MAX_ATTEMPTS = 5
+ADMIN_LOCK_MINUTES = 15
+
+# Vercel refuses request bodies above 4.5 MB before they reach the function.
+# The same cap locally means an upload that works here works there too.
+MAX_UPLOAD_BYTES = 4_500_000
