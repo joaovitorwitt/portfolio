@@ -27,6 +27,7 @@ def plan_updates(rows: list[dict]) -> list[dict]:
             'has_math': result.has_math,
             'toc': result.toc,
             'word_count': result.word_count,
+            'body_text': result.text,
         }
         if any(row[column] != value for column, value in fresh.items()):
             updates.append(

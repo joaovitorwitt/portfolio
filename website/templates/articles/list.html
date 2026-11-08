@@ -1,43 +1,36 @@
 {% extends 'base.html' %}
-{%- from 'partials/components.html' import cover, round_button %}
+{%- from 'partials/components.html' import round_button %}
+{%- from 'partials/icons.html' import icon %}
 
 {% block styles %}
   <link rel="stylesheet" href="/css/pages/articles/articles.modules.css">
   <link rel="stylesheet" href="/css/components/roundbutton.modules.css">
 {%- endblock %}
 
+{% block scripts %}
+  <script src="/js/search.js" defer></script>
+{%- endblock %}
+
 {% block body %}
 <div class="articles-page-wrapper">
   {% include 'partials/header.html' %}
   <div class="container">
-    {%- if articles %}
-    <div class="posts-wrapper">
-      {%- for article in articles %}
-      <a class="article" href="/articles/{{ article.slug }}">
-        <div class="article-wrapper">
-          <div class="posts-article-image-wrapper">
-            {%- if article.image_url %}
-            {{ cover(article, sizes='(max-width: 767px) 100vw, 33vw', class='article-image') }}
-            {%- endif %}
-          </div>
+    {#- A plain GET form: without JavaScript it submits and the server answers
+        with the results page. search.js only makes it update as you type. #}
+    <form class="search-form" method="get" action="{{ url_for('pages.articles') }}" role="search" data-search-form>
+      <label class="search-label" for="search-q">Search articles</label>
+      <div class="search-field">
+        <input class="search-input" type="search" id="search-q" name="q" value="{{ query }}" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Newton, kinematics…">
+        <button class="search-submit" type="submit" aria-label="Search">{{ icon('magnifying-glass') }}</button>
+      </div>
+      {%- if tag %}
+      <input type="hidden" name="tag" value="{{ tag }}">
+      {%- endif %}
+    </form>
 
-          <div class="article-data-container">
-            <h3 class="article-title">{{ article.title }}</h3>
-            <p class="article-description">{{ article.description }}</p>
-
-            <div class="article-data">
-              <span class="article-data-spacer"></span>
-              <p class="tags">{{ article.tags | join(', ') }}</p>
-              <span class="title-font">{{ article.created_at | date }}</span>
-            </div>
-          </div>
-        </div>
-      </a>
-      {%- endfor %}
+    <div id="search-results">
+      {% include 'articles/results.html' %}
     </div>
-    {%- else %}
-    <p style="text-align: center">No articles found.</p>
-    {%- endif %}
 
     <div class="large-button-container" style="padding-top: 3rem; padding-bottom: 3rem">
       {{ round_button('/', 'Return') }}

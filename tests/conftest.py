@@ -6,6 +6,7 @@ import settings
 import website.db
 import website.views
 from website import create_app
+from website.search import MARK_END, MARK_START
 
 SITE_URL = 'https://site.test'
 BLOB_URL = 'https://store1.public.blob.vercel-storage.com'
@@ -50,6 +51,37 @@ class FakeRepository:
         ]
         rows.sort(key=lambda row: row['created_at'], reverse=True)
         return rows[offset : offset + limit]
+
+    def search_text(self, kind, query, tag=None, limit=50, offset=0) -> list[dict]:
+        """
+        A stand-in for Postgres: a title match comes first, and a match in
+        `body_text` (only these fake rows have it) brings a marked snippet.
+        """
+        self.searched = (kind, query, tag)
+        needle = query.lower()
+        found = []
+        for row in self.search(kind=kind, tag=tag, limit=1000):
+            body = row.get('body_text', '')
+            if needle in row['title'].lower():
+                found.append((0, row | {'snippet': None}))
+            elif needle in body.lower():
+                start = body.lower().index(needle)
+                marked = (
+                    body[:start]
+                    + MARK_START
+                    + body[start : start + len(needle)]
+                    + MARK_END
+                    + body[start + len(needle) :]
+                )
+                found.append((1, row | {'snippet': marked}))
+
+        found.sort(key=lambda pair: pair[0])
+        return [row for _, row in found][offset : offset + limit]
+
+    def tags(self, kind: str) -> list[str]:
+        return sorted(
+            {tag for row in self.rows if row['kind'] == kind for tag in row['tags']}
+        )
 
     def get_by_slug(self, kind: str, slug: str) -> dict | None:
         for row in self.rows:

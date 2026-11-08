@@ -8,6 +8,7 @@ from psycopg.types.json import Jsonb
 from psycopg_pool import ConnectionPool
 
 import settings
+from website import search
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +35,22 @@ CONTENT_COLUMNS = (
 )
 
 _SELECT = f'SELECT {", ".join(CONTENT_COLUMNS)} FROM content'
+
+# One fragment of about 15 to 30 words around the best match.
+_HEADLINE_OPTIONS = (
+    'MaxFragments=1,MaxWords=30,MinWords=15,'
+    f'StartSel={search.MARK_START},StopSel={search.MARK_END}'
+)
+
+# How close a title word has to be to the query for the typo fallback:
+# "kinmatics" scores 0.8 against "Kinematics in One Dimension".
+TYPO_THRESHOLD = 0.5
+
+_TSQUERY_EXACT = "websearch_to_tsquery('english', %(head)s)"
+_TSQUERY_PREFIX = (
+    "websearch_to_tsquery('english', %(head)s) {} "
+    "to_tsquery('english', %(prefix)s || ':*')"
+)
 
 
 def build_conninfo() -> str:
@@ -114,6 +131,78 @@ class ContentRepository:
             rows = conn.execute(query, params).fetchall()
 
         return rows
+
+    def search_text(
+        self,
+        kind: str,
+        query: str,
+        tag: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[dict]:
+        """
+        Full-text search, best match first, each row with a `snippet` of its
+        body around the match (None when only the title or tags matched). If
+        nothing matches, falls back to titles that look like the query, to
+        forgive a typo.
+
+        `query` should already have gone through search.clean_query().
+        """
+        terms = search.split_terms(query)
+        if terms.prefix is None:
+            tsquery = _TSQUERY_EXACT
+        else:
+            tsquery = _TSQUERY_PREFIX.format('||' if terms.either else '&&')
+
+        params = {
+            'kind': kind,
+            'tag': tag,
+            'head': terms.head,
+            'prefix': terms.prefix,
+            'query': query,
+            'options': _HEADLINE_OPTIONS,
+            'threshold': TYPO_THRESHOLD,
+            'limit': limit,
+            'offset': offset,
+        }
+        tag_clause = ' AND %(tag)s = ANY(tags)' if tag is not None else ''
+        columns = ', '.join(CONTENT_COLUMNS)
+
+        matches = f"""
+            WITH q AS (SELECT {tsquery} AS tsquery)
+            SELECT {columns},
+                ts_headline('english', coalesce(body_text, ''), q.tsquery, %(options)s)
+                    AS snippet
+            FROM content, q
+            WHERE kind = %(kind)s{tag_clause} AND search @@ q.tsquery
+            ORDER BY ts_rank_cd(search, q.tsquery) DESC, created_at DESC
+            LIMIT %(limit)s OFFSET %(offset)s
+        """
+        lookalikes = f"""
+            SELECT {columns}, NULL AS snippet
+            FROM content
+            WHERE kind = %(kind)s{tag_clause}
+                AND extensions.word_similarity(%(query)s, title) > %(threshold)s
+            ORDER BY extensions.word_similarity(%(query)s, title) DESC, created_at DESC
+            LIMIT %(limit)s OFFSET %(offset)s
+        """
+
+        with get_pool().connection() as conn:
+            rows = conn.execute(matches, params).fetchall()
+            if not rows and offset == 0:
+                rows = conn.execute(lookalikes, params).fetchall()
+
+        return rows
+
+    def tags(self, kind: str) -> list[str]:
+        """Every tag in use for this kind, alphabetically."""
+        query = (
+            'SELECT DISTINCT unnest(tags) AS tag FROM content WHERE kind = %s '
+            'ORDER BY tag'
+        )
+
+        with get_pool().connection() as conn:
+            return [row['tag'] for row in conn.execute(query, (kind,)).fetchall()]
 
     def get_by_slug(self, kind: str, slug: str) -> dict | None:
         query = f'{_SELECT} WHERE kind = %s AND slug = %s'
@@ -229,7 +318,7 @@ class ContentMarkdown:
 
     def sources(self) -> list[dict]:
         query = (
-            'SELECT id, slug, body_md, body_html, has_math, toc, word_count '
+            'SELECT id, slug, body_md, body_html, has_math, toc, word_count, body_text '
             'FROM content WHERE body_md IS NOT NULL ORDER BY kind, slug'
         )
 
@@ -244,7 +333,8 @@ class ContentMarkdown:
                 body_html = %(body_html)s,
                 has_math = %(has_math)s,
                 toc = %(toc)s,
-                word_count = %(word_count)s
+                word_count = %(word_count)s,
+                body_text = %(body_text)s
             WHERE id = %(id)s
         """
 
