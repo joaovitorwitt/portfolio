@@ -20,10 +20,9 @@
     <form class="search-form" method="get" action="{{ url_for('pages.articles') }}" role="search" data-search-form>
       <label class="search-label" for="search-q">Search articles</label>
       <div class="search-field">
-        <input class="search-input" type="search" id="search-q" name="q" value="{{ query }}" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Newton, kinematics, &quot;design patterns&quot;…" aria-describedby="search-hint">
+        <input class="search-input" type="search" id="search-q" name="q" value="{{ query }}" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Newton, kinematics…">
         <button class="search-submit" type="submit" aria-label="Search">{{ icon('magnifying-glass') }}</button>
       </div>
-      <p class="search-hint" id="search-hint">Use quotes for a phrase and a minus sign to leave a word out. <span class="search-shortcut" hidden>Press <kbd>/</kbd> to search.</span></p>
       {%- if tag %}
       <input type="hidden" name="tag" value="{{ tag }}">
       {%- endif %}

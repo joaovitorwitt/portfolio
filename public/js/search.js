@@ -14,9 +14,6 @@
   var controller = null;
   var current = normalise(input.value);
 
-  var shortcut = form.querySelector('.search-shortcut');
-  if (shortcut) shortcut.hidden = false;
-
   function normalise(value) {
     return value.trim().replace(/\s+/g, ' ');
   }

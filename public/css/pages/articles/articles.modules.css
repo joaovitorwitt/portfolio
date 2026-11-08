@@ -74,7 +74,7 @@
 
 .search-form {
   max-width: 64rem;
-  margin: 0 auto 2rem;
+  margin: 0 auto 2.4rem;
 }
 
 .search-label {
@@ -126,19 +126,6 @@
   color: inherit;
   font-size: 1.8rem;
   cursor: pointer;
-}
-
-.search-hint {
-  margin-top: 0.8rem;
-  font-size: 1.3rem;
-  opacity: 0.7;
-}
-
-.search-hint kbd {
-  padding: 0 0.5rem;
-  border: 1px solid currentColor;
-  border-radius: 0.3rem;
-  font-family: inherit;
 }
 
 .tag-chips {
