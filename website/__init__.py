@@ -1,5 +1,6 @@
 import logging
-from datetime import UTC, datetime
+import secrets
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from flask import Flask, request
@@ -13,13 +14,38 @@ import settings
 PUBLIC_DIR = Path(__file__).resolve().parent.parent / 'public'
 
 
+ADMIN_PREFIX = '/admin'
+
+
+def is_admin_path(path: str) -> bool:
+    return path == ADMIN_PREFIX or path.startswith(ADMIN_PREFIX + '/')
+
+
 def create_app() -> Flask:
     logging.basicConfig(level=logging.INFO)
+
+    if settings.ON_VERCEL and not settings.SECRET_KEY:
+        raise RuntimeError(
+            'SECRET_KEY is not set. Add it in the Vercel dashboard: '
+            'Settings -> Environment Variables.'
+        )
 
     if settings.ON_VERCEL:
         app = Flask(__name__, static_folder=None)
     else:
         app = Flask(__name__, static_folder=PUBLIC_DIR, static_url_path='')
+
+    app.config.update(
+        # Locally, a missing key gets a random one: signing in works, but only
+        # until the server restarts.
+        SECRET_KEY=settings.SECRET_KEY or secrets.token_hex(32),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+        # Local development runs on plain http.
+        SESSION_COOKIE_SECURE=settings.ON_VERCEL,
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=settings.ADMIN_SESSION_HOURS),
+        MAX_CONTENT_LENGTH=settings.MAX_UPLOAD_BYTES,
+    )
 
     @app.context_processor
     def inject_site():
@@ -59,6 +85,16 @@ def create_app() -> Flask:
         if request.endpoint == 'static' and response.status_code < 400:
             return response
 
+        # Admin pages are personal: a shared cache must never keep one, or it
+        # would serve it to the next visitor. No CDN header either, so Vercel
+        # never stores them.
+        if is_admin_path(request.path):
+            response.headers['Cache-Control'] = 'private, no-store'
+            response.headers['X-Robots-Tag'] = 'noindex'
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers.pop('Vercel-CDN-Cache-Control', None)
+            return response
+
         cacheable = (
             request.method in ('GET', 'HEAD')
             and response.status_code == 200
@@ -85,9 +121,11 @@ def create_app() -> Flask:
         return response.make_conditional(request)
 
     from website import filters
+    from website.admin import bp as admin_bp
     from website.views import bp
 
     filters.register(app)
     app.register_blueprint(bp)
+    app.register_blueprint(admin_bp, url_prefix=ADMIN_PREFIX)
 
     return app
